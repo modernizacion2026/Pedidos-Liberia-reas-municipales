@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pedido de Libreria - Municipalidad de Jesus Maria</title>
+<meta property="og:title" content="Pedido de Libreria - Municipalidad de Jesus Maria" />
+<meta property="og:description" content="Sistema de pedidos de materiales de oficina y libreria para la Municipalidad de Jesus Maria." />
+<meta property="og:type" content="website" />
+<meta name="description" content="Sistema de pedidos de materiales de oficina y libreria para la Municipalidad de Jesus Maria." />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja:#D4532B;--naranja-oscuro:#B8441F;--naranja-claro:#E8763F;
+    --naranja-bg:#FEF3EE;--naranja-border:#F6C5A8;
+    --teal:#1DACA3;--teal-bg:#E6F8F7;--teal-border:#A3E0DC;
+    --verde:#5FB445;--verde-bg:#EDF7E9;--verde-border:#B5D9A3;
+    --rojo:#D32F2F;--rojo-bg:#FEF2F2;--rojo-border:#FFCDD2;
+    --gris:#6B7280;--gris-claro:#F7F8FA;--gris-borde:#E5E7EB;
+    --texto:#1F2937;--texto-sec:#6B7280;--blanco:#FFFFFF;
+    --radio:10px;--radio-lg:16px;
+    --sombra:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+    --sombra-md:0 4px 16px rgba(0,0,0,0.08);
+    --sombra-lg:0 8px 30px rgba(0,0,0,0.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#F5F5F5;color:var(--texto);font-size:15px;min-height:100vh;}
+  .top-accent{height:4px;background:linear-gradient(90deg,var(--naranja),var(--naranja-claro),var(--teal),var(--verde));}
+  .topbar{background:var(--blanco);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-bottom:1px solid var(--gris-borde);}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{width:44px;height:44px;border-radius:12px;background:var(--naranja);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:white;box-shadow:0 2px 8px rgba(212,83,43,0.3);}
+  .topbar-title{font-size:15px;font-weight:700;color:var(--texto);}
+  .topbar-sub{font-size:12px;color:var(--texto-sec);margin-top:1px;font-weight:500;}
+  .form-page{max-width:800px;margin:2rem auto;padding:0 1rem 3rem;}
+  .form-header{margin-bottom:1.5rem;}
+  .form-header .section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--naranja);margin-bottom:6px;}
+  .form-header h1{font-size:26px;font-weight:800;color:var(--texto);letter-spacing:-0.02em;}
+  .form-header p{font-size:14px;color:var(--texto-sec);margin-top:6px;line-height:1.7;}
+  .notice{display:flex;align-items:center;gap:10px;background:var(--naranja-bg);border:1px solid var(--naranja-border);border-radius:var(--radio);padding:12px 16px;margin-bottom:1.5rem;font-size:13px;color:var(--naranja-oscuro);font-weight:500;border-left:4px solid var(--naranja);}
+  .card{background:var(--blanco);border-radius:var(--radio-lg);border:1px solid var(--gris-borde);padding:1.75rem;margin-bottom:1.25rem;box-shadow:var(--sombra);}
+  .card-title{font-size:12px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1.2rem;padding-bottom:10px;border-bottom:2px solid var(--gris-borde);display:flex;align-items:center;gap:8px;}
+  .card-title::before{content:'';width:4px;height:16px;background:var(--naranja);border-radius:2px;display:inline-block;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:block;font-size:13px;font-weight:600;color:var(--texto);margin-bottom:6px;}
+  label .req{color:var(--rojo);margin-left:2px;}
+  input[type=text],input[type=email],input[type=number],select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--gris-borde);border-radius:var(--radio);font-size:14px;font-family:inherit;color:var(--texto);background:var(--blanco);transition:border-color 0.2s,box-shadow 0.2s;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--naranja);box-shadow:0 0 0 3px rgba(212,83,43,0.1);}
+  textarea{resize:vertical;min-height:80px;line-height:1.5;}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .items-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;}
+  .items-table th{text-align:left;font-size:11px;font-weight:700;color:var(--texto-sec);text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;background:var(--gris-claro);border-bottom:2px solid var(--gris-borde);}
+  .items-table td{padding:8px 10px;border-bottom:1px solid var(--gris-borde);vertical-align:middle;}
+  .items-table td select,.items-table td input{font-size:13px;padding:7px 10px;}
+  .items-table td input[type=number]{max-width:80px;}
+  .ac-wrap{position:relative;width:100%;}
+  .ac-wrap input.ac-input{width:100%;padding:7px 10px;font-size:13px;border:1.5px solid var(--gris-borde);border-radius:var(--radio);font-family:inherit;color:var(--texto);background:var(--blanco);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+  .ac-wrap input.ac-input:focus{border-color:var(--naranja);box-shadow:0 0 0 3px rgba(212,83,43,0.1);}
+  .ac-wrap input.ac-input.ac-selected{background:var(--verde-bg);border-color:var(--verde-border);}
+  .ac-list{position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--gris-borde);border-top:none;border-radius:0 0 var(--radio) var(--radio);max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--sombra-md);display:none;}
+  .ac-list.open{display:block;}
+  .ac-list .ac-item{padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gris-borde);color:var(--texto);transition:background 0.1s;}
+  .ac-list .ac-item:last-child{border-bottom:none;}
+  .ac-list .ac-item:hover,.ac-list .ac-item.ac-active{background:var(--naranja-bg);color:var(--naranja);}
+  .ac-list .ac-item mark{background:#FBBF24;color:var(--texto);border-radius:2px;padding:0 1px;}
+  .ac-list .ac-empty{padding:12px;font-size:13px;color:var(--texto-sec);text-align:center;}
+  .btn-icon{background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:6px;color:var(--texto-sec);font-size:16px;line-height:1;transition:all 0.15s;}
+  .btn-icon:hover{background:var(--rojo-bg);color:var(--rojo);}
+  .btn-add{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 16px;border:2px dashed var(--gris-borde);border-radius:var(--radio);background:transparent;color:var(--texto-sec);cursor:pointer;transition:all 0.2s;}
+  .btn-add:hover{border-color:var(--naranja);color:var(--naranja);background:var(--naranja-bg);}
+  .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,var(--naranja),var(--naranja-oscuro));color:white;border:none;border-radius:var(--radio);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%;margin-top:1rem;box-shadow:0 4px 14px rgba(212,83,43,0.3);}
+  .btn-primary:hover{background:linear-gradient(135deg,var(--naranja-oscuro),#9A3A17);box-shadow:0 6px 20px rgba(212,83,43,0.4);transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none;}
+  .success-panel{display:none;background:var(--verde-bg);border:1px solid var(--verde-border);border-radius:var(--radio-lg);padding:2.5rem;text-align:center;margin-top:1rem;box-shadow:var(--sombra-md);}
+  .success-panel .icon{font-size:52px;margin-bottom:14px;}
+  .success-panel h2{font-size:22px;font-weight:800;color:var(--verde);margin-bottom:10px;}
+  .success-panel p{font-size:14px;color:var(--texto-sec);margin-bottom:1.5rem;line-height:1.6;}
+  .btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:1.5px solid var(--gris-borde);border-radius:var(--radio);background:white;color:var(--texto);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .btn-secondary:hover{background:var(--gris-claro);border-color:var(--naranja);color:var(--naranja);}
+  .conn-bar{font-size:12px;padding:6px 14px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+  .conn-ok{background:var(--verde-bg);color:var(--verde);}
+  .conn-err{background:var(--rojo-bg);color:var(--rojo);}
+  .conn-wait{background:var(--naranja-bg);color:var(--naranja);}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--naranja);color:white;padding:12px 24px;border-radius:var(--radio);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;transition:transform 0.3s ease;z-index:999;pointer-events:none;box-shadow:var(--sombra-lg);white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .footer{background:#2D2D2D;color:rgba(255,255,255,0.6);text-align:center;padding:20px;font-size:12px;margin-top:3rem;}
+  .footer a{color:var(--naranja-claro);text-decoration:none;}
+  @media(max-width:640px){
+    .grid-2{grid-template-columns:1fr;}
+    .topbar{padding:0 1rem;height:60px;}
+    .topbar-sub{display:none;}
+    .items-table th:nth-child(3),.items-table td:nth-child(3){display:none;}
+    .form-page{padding:0 0.75rem 2rem;margin-top:1.5rem;}
+  }
+</style>
+</head>
+<body>
+<div class="top-accent"></div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">JM</div>
+    <div>
+      <div class="topbar-title">Municipalidad de Jesus Maria</div>
+      <div class="topbar-sub">Sistema de Pedidos de Libreria</div>
+    </div>
+  </div>
+  <div id="conn-indicator" class="conn-bar conn-wait">Conectando...</div>
+</div>
+
+<div class="form-page">
+  <div class="form-header">
+    <div class="section-label">Formulario de pedidos</div>
+    <h1>Pedido de materiales de oficina</h1>
+    <p>Completa el formulario con los articulos que necesitas. Los pedidos se reciben del <strong>1 al 10 de cada mes</strong>. Seras notificado cuando esten listos para retirar.</p>
+  </div>
+  <div class="notice">Los pedidos enviados fuera del periodo seran registrados pero quedaran en espera hasta el proximo ciclo.</div>
+
+  <div id="formulario-wrap">
+    <div class="card">
+      <div class="card-title">Identificacion</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Secretaria <span class="req">*</span></label>
+          <select id="f-secretaria">
+            <option value="">Seleccionar...</option>
+            <option>Intendencia</option>
+            <option>Coordinacion de Gestion y Planificacion Estrategica</option>
+            <option>Gobierno</option>
+            <option>Promocion Humana</option>
+            <option>Hacienda</option>
+            <option>Asesoria Letrada</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Area / Direccion <span class="req">*</span></label>
+          <div class="ac-wrap" id="ac-wrap-area">
+            <input type="text" class="ac-input" id="f-area" placeholder="Escribi para buscar area..." autocomplete="off" data-value="" />
+            <div class="ac-list" id="ac-list-area"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Nombre del solicitante <span class="req">*</span></label>
+          <input type="text" id="f-nombre" placeholder="Nombre y apellido" />
+        </div>
+        <div class="field">
+          <label>Correo electronico</label>
+          <input type="email" id="f-email" placeholder="correo@jesusmaria.gob.ar" />
+        </div>
+      </div>
+      <div class="field" style="max-width:260px">
+        <label>Fecha del pedido</label>
+        <input type="text" id="f-fecha" readonly style="background:var(--gris-claro);color:var(--texto-sec);cursor:default;font-weight:600" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Articulos solicitados</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width:34%">Articulo</th>
+            <th style="width:24%">Especificacion / Marca</th>
+            <th style="width:18%">Tipo de empaque</th>
+            <th style="width:12%">Cantidad</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+      <button class="btn-add" onclick="addItem()">+ Agregar articulo</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Observaciones</div>
+      <textarea id="f-obs" placeholder="Indica urgencia, aclaraciones adicionales u otras consideraciones para este pedido..."></textarea>
+    </div>
+
+    <button class="btn-primary" id="btn-enviar" onclick="submitPedido()">Enviar pedido</button>
+  </div>
+
+  <div class="success-panel" id="success-panel">
+    <div class="icon">&#10004;</div>
+    <h2>Pedido enviado correctamente!</h2>
+    <p>Tu pedido fue registrado y el area de compras lo recibira en breve.<br>Te avisaran cuando este listo para retirar.</p>
+    <button class="btn-secondary" onclick="nuevoFormulario()">Hacer otro pedido</button>
+  </div>
+</div>
+
+<div class="footer">Municipalidad de Jesus Maria &middot; <a href="https://www.jesusmaria.gov.ar" target="_blank">www.jesusmaria.gov.ar</a></div>
+<div class="toast" id="toast"><span id="toast-msg">Listo</span></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONFIGURACION  ← PEGAR TU URL AQUI
+// ════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIZ-WWCCRsJ5GEI5TBiV7eYTKsk9MPe3-RHmaUMJJl7nS4yaEThsRn9CWTYAQ7PjmQhQ/exec';
+
+// ════════════════════════════════════════════════
+const AREAS = [
+  'Agencia de Desarrollo Economico','Archivo','Bromatologia','Capital Humano - RRHH',
+  'Compras','Control de Transito y Gestion de Riesgos','Direccion de Control de Gestion',
+  'Direccion de Cultura','Direccion de Deporte','Direccion de Educacion',
+  'Direccion de Innovacion y Modernizacion','Direccion de Politicas Sociales',
+  'Direccion de Recursos Tributarios','Eventos y Promocion Institucional',
+  'Gestion Ambiental, Higiene Urbana y Servicios Publicos','Inclusion (Ninez - Discapacidad)',
+  'Intendencia','Mesa de Entrada','Obras Privadas','Obras Publicas','Participacion Ciudadana',
+  'Salud y Calidad de Vida','Saneamiento','Sanidad Animal',
+  'Secretaria de Coordinacion y Planificacion Estrategica','Secretaria de Desarrollo Urbano',
+  'Secretaria de Gobierno','Secretaria de Hacienda','Secretaria de Promocion Humana',
+  'Secretaria General','Sistemas','SubSecretaria de Gobierno','Tesoreria','Turismo',
+  'Unidad de Politicas de Genero'
+];
+
+const CATALOGO_DEFAULT = [
+  "1003042494 - Abrochadora","1003109375 - Abrojo","1003112199 - Acrilico decorativo * 200cc",
+  "1003111967 - Acrilico decorativo * 50cc","1003047256 - Acuarela","1003112201 - Adhesivo mod podge * 200cc",
+  "1003060232 - Adhesivo sintetico blanco","1003112203 - Adhesivo sintetico con glitter * 38 grs",
+  "1003099679 - Adhesivo sintetico en barra","1003108641 - Adhesivo sintetico transparente",
+  "1003033148 - Agenda","1003112309 - Aguja de coser a mano","1003112310 - Aguja para maquina de coser n 11",
+  "1003112311 - Aguja para maquina de coser n 14","1003110988 - Alfiler con cabeza de metal niquelado",
+  "1003064201 - Alfiler de gancho","1003094863 - Alfilere con cabeza colore","1003108083 - Almohadilla",
+  "1003112202 - Antifaz de carton con elastico","1003110172 - Arcilla","1003111943 - Aro metalico para carpeta",
+  "1003049739 - Asta de madera","1003107232 - Banda elastica latex","1003111936 - Banda para escolta",
+  "1003111185 - Bandeja apilable con bisagra","1003083004 - Bandeja portapapeles metalica",
+  "1003023798 - Bandera","1003106853 - Banderin de mano","1003110042 - Barra de silicona para pistola",
+  "1003111968 - Base acrilica * 200cc","1003112175 - Bastidor de tela","1003112302 - Bengala de humo",
+  "1003013765 - Bibliorato oficio reforzado","1003041968 - Block 24 hojas dibujo oficio",
+  "1003020607 - Block 400 hojas cuadriculado","1003011783 - Block 48 hojas rayado",
+  "1003080242 - Block de hojas para rotafolio","1003111942 - Block hojas de dibujo a5",
+  "1003112271 - Block hojas oficio para acuarelas * 12 unidades","1003112206 - Bobina de papel sulfito",
+  "1003112256 - Boligrafo color negro","1003103125 - Bolsa boutique de 25 * 35 cm",
+  "1003112280 - Bolsa de celofan transparente 30cm * 45cm * 100 unidades",
+  "1003112281 - Bolsa de tela mecanica 20 * 15 cm","1003108266 - Bolsa kraft c/manija",
+  "1003112279 - Bolsa transparente p/ regalo 25cm * 25cm","1003075181 - Borrador para pizarra",
+  "1003112207 - Brillantina * 4 grs","1003112205 - Brillantina * 8 grs","1003075231 - Broche aprieta papel",
+  "1003109392 - Broche dorado n 4 mariposa * 100 un","1003082892 - Broche para abrochadora 10/50",
+  "1003051338 - Broche para abrochadora 24/6","1003022629 - Caja archivo de carton triplex",
+  "1003047247 - Caja archivo plastica","1003095934 - Caja de carton para archivo 26cm * 32cm * 45cm",
+  "1003072650 - Caja de carton para regalo","1003112236 - Caja empanada micro * 100",
+  "1003112306 - Calculadora cientifica","1003017828 - Calendario","1003112283 - Canica * 50 unidades",
+  "1003018665 - Canutillo","1003050629 - Caratula para expediente","1003108946 - Carpeta a4 tapa transparente",
+  "1003108357 - Carpeta colgante de carton","1003112266 - Carpeta colgante de plastico tamano oficio",
+  "1003047961 - Carpeta oficio con compartimientos","1003060449 - Carpeta oficio tapa transparente",
+  "1003038515 - Carpeta oficio de cartulina","1003111941 - Carton corrugado",
+  "1003112286 - Carton gris 70cm* 100cm * 2.5mm","1003027344 - Cartulina",
+  "1003110906 - Cera para contar billetes","1003057878 - Chinches * 100 un","1003112259 - Cinta bifaz",
+  "1003045705 - Cinta correctora","1003057875 - Cinta de embalar 48 mm * 50 mt transparente",
+  "1003112012 - Cinta falletina de 1.40 * 10 mtrs","1003112013 - Cinta falletina de 1.40 * 50 mtrs",
+  "1003112210 - Cinta gross * 10mm","1003014978 - Cinta magica","1003072381 - Cinta ribbonette",
+  "1003038530 - Cinta scotch pequena","1003112272 - Cinta scoth transparente 24 mm * 50 mtrs",
+  "1003031148 - Clips metal n 4 * 100 un","1003107238 - Clips metal n 5 * 100 un",
+  "1003058458 - Clips metal n 6 * 100 un","1003107239 - Clips metal n 8 * 100 un",
+  "1003112294 - Colorante liquido * 50 cc","1003112304 - Compas escolar metalico de 115 mm",
+  "1003015026 - Cordel porta credencial c/mosqueton","1003015635 - Crayones * 6 un",
+  "1003051420 - Cuaderno 16*21 cm","1003088808 - Cuaderno forrado 9 * 14 cm con boligrafo",
+  "1003051419 - Cuaderno oficio","1003112269 - Cuerina","1003111989 - Delineador vitral * 40cc",
+  "1003042051 - Diccionario espanol-espanol","1003039494 - Diccionario espanol-ingles",
+  "1003089097 - Elastico 6 mm * 100 mt","1003112261 - Escuadra de madera para modista * 60 cm",
+  "1003112295 - Esencia liquida concentrada al agua * 500 cc","1003045130 - Etiqueta para lomo de bibliorato",
+  "1003111978 - Exhibidor carpeta laminas decoupage * 80 motivos",
+  "1003111980 - Exhibidor carpeta laminas sublimacion * 40 motivos",
+  "1003111979 - Exhibidor carpeta stencil * 190 motivos","1003108087 - Fibra permanente",
+  "1003004172 - Fibras * 12 un","1003108086 - Folio a4","1003035833 - Folio oficio",
+  "1003112212 - Fotocopias","1003111990 - Gel para transferencia * 180cc","1003069148 - Gibre purpurina",
+  "1003049204 - Globo","1003109373 - Globo pinata","1003082276 - Goma de borrar",
+  "1003027206 - Goma eva","1003039059 - Goma eva estampada","1003112296 - Guillotina manual para papel",
+  "1003112300 - Harina de madera de pino","1003112288 - Hilo cinta","1003067671 - Hilo de algodon 33 gr",
+  "1003112273 - Hilo de algodon 40 gr","1003072385 - Hilo de coser","1003112312 - Hilo de filamento",
+  "1003074549 - Hilo de nylon","1003112274 - Hilo de papel * 4mm * 100 mtrs",
+  "1003112258 - Hilo polietileno 2.5 mm","1003038186 - Hilo sisal",
+  "1003112305 - Hoja tamano rivadavia cuadriculada en paquete * 48","1003112001 - Iman 5 cm de diametro",
+  "1003112265 - Kit * 12 pinceles punta chata","1003112263 - Kit * 12 pinceles punta redonda",
+  "1003112264 - Kit * 6 pinceles punta chata","1003112262 - Kit * 6 pinceles punta redonda",
+  "1003112291 - Kit de geometria escolar","1003112290 - Kit de geometria para pizarron de madera",
+  "1003112276 - Kit*4 pinceletas punta chata","1003111974 - Laca poliuretanica 100 cc",
+  "1003112120 - Lamina de acetato 50 * 70 cm","1003110624 - Lapicera azul trazo fino",
+  "1003059051 - Lapicera azul trazo grueso","1003110625 - Lapicera negra trazo fino",
+  "1003110623 - Lapicera negra trazo grueso","1003110622 - Lapicera roja trazo grueso",
+  "1003110989 - Lapicera verde trazo fino","1003059053 - Lapiceras roja trazo fino",
+  "1003061204 - Lapiz corrector","1003044223 - Lapiz de color * 12 un","1003049513 - Lapiz goma con escobilla",
+  "1003003601 - Lapiz negro","1003005772 - Lapiz portamina","1003075949 - Lapiz portamina n 05",
+  "1003112204 - Lentejuela cube 8 mm * 250 grs","1003112208 - Lentejuela cube 8 mm * 3 grs",
+  "1003033189 - Libro artistico","1003105711 - Libro de actas * 100 folios",
+  "1003023727 - Libro de actas * 200 folios","1003112260 - Libro de actas * 400 folios",
+  "1003068231 - Libro de lectura infantil","1003072802 - Libro de texto",
+  "1003111996 - Liquido para sublimar * 100cc","1003109687 - Maquillaje artistico",
+  "1003045748 - Marcador al agua","1003048266 - Marcador al esmalte","1003110175 - Marcador indeleble",
+  "1003033151 - Marcador para pizarra punta redonda","1003081340 - Microfibra",
+  "1003081040 - Mina 0.5 mm p/portamina","1003112287 - Mini gomitas de pelo colores surtidos * 100",
+  "1003111982 - Mod podge * 200 g","1003112297 - Molde para sahumerio cono invertido",
+  "1003112298 - Molde para sahumerio esfera","1003112299 - Molde para sahumerio espiral",
+  "1003111025 - Molinete de viento","1003042409 - Nepaco plastico * 50 un",
+  "1003112301 - Nitrato de potasio polvo","1003014066 - Nota adhesiva 38*50 mm * 100 hojas",
+  "1003051426 - Nota adhesiva 76*76 mm * 100 hojas","1003008880 - Nylon 1.40 mt 250 micrones",
+  "1003112284 - Ojos moviles n 12 * 100 unidades","1003112285 - Ovillo de lana multicolor",
+  "1003111988 - Oxido real * 3 ltrs","1003109835 - Palito de helado","1003021859 - Papel afiche",
+  "1003112109 - Papel carbonico","1003072329 - Papel celofan","1003058282 - Papel crepe",
+  "1003108609 - Papel de barrilete","1003004375 - Papel de forrar","1003021868 - Papel glace",
+  "1003112292 - Papel grafiado","1003049247 - Papel madera","1003108976 - Papel para plotter",
+  "1003108583 - Papel sulfito","1003111977 - Pasta de modelar * 200 cc","1003111976 - Pasta flexible * 200 cc",
+  "1003111981 - Pasta petrea * 3 kgs","1003057161 - Perforadora","1003111951 - Pick up roller",
+  "1003111991 - Pincel taponador n 10","1003111992 - Pincel taponador n 6",
+  "1003111985 - Pintura vintage * 200 cc","1003111970 - Pintura vitral * 32cc",
+  "1003035830 - Pistola para pegamento","1003112308 - Pizarra blanca 0.80 * 1 mt",
+  "1003087491 - Pizarra blanca 1.20*0.90 mt","1003051431 - Pizarra blanca 1.20*1.50 mt",
+  "1003038639 - Pizarra corcho","1003112209 - Plancha de corcho 45cm * 30cm * 4 mm",
+  "1003112154 - Plancha de corcho 45cm * 60cm * 4 mm","1003075312 - Plancha de iman autoadhesivo a4",
+  "1003065115 - Plancha de ojalillo","1003049245 - Plancha de plastico corrugado",
+  "1003049669 - Plancha para plastificar","1003092169 - Plumas sinteticas * 50 un",
+  "1003108864 - Porcelana fria","1003086906 - Porta block sujetador con tapa y clip a4",
+  "1003097844 - Porta cinta scotch","1003112257 - Portataco","1003093679 - Pulsera de papel tyvek",
+  "1003112211 - Pulsera magica fluo 22x3cm","1003035821 - Registro de asistencia escolar",
+  "1003008818 - Regla","1003035013 - Repuesto de agenda","1003112303 - Repuesto de boligrafo",
+  "1003038521 - Resaltador","1003107112 - Resma papel a3","1003011026 - Resma papel a4",
+  "1003068351 - Resma papel legal","1003112275 - Resma papel obra","1003063983 - Rodillo entintador",
+  "1003112278 - Rollo de elastico de embutir 1 cm (8mm) * 50 metros",
+  "1003045380 - Rollo de papel p/maquina sumadora 57 mm","1003108088 - Rollo de papel p/maquina sumadora 60 mm",
+  "1003080241 - Rotafolio con soporte","1003018119 - Rotulo adhesivo mediano s/renglon",
+  "1003075946 - Saca gancho","1003052976 - Sacapuntas","1003032118 - Sello",
+  "1003111995 - Sello bajo relieve","1003110221 - Senalador de pagina adhesivo de colores",
+  "1003099470 - Separador cartulina a4","1003000719 - Separador cartulina oficio",
+  "1003112277 - Sobre blanco a4 100gr","1003112000 - Sobre papel blanco 16*11.5 cm",
+  "1003112289 - Sobre papel blanco 23,5 * 12 cm","1003112307 - Sobre papel madera 13 * 19 cm",
+  "1003060241 - Sobre papel madera a4","1003108092 - Sobre papel madera doble oficio",
+  "1003108091 - Sobre papel madera oficio","1003108093 - Sobre papel madera pequeno (19*24 cm)",
+  "1003075311 - Tabla acrilica porta block a4","1003039812 - Tabla sujeta papeles",
+  "1003033377 - Taco calendario","1003112213 - Tela friselina","1003027443 - Tela hule * 1.40 mt ancho",
+  "1003032692 - Tempera","1003112267 - Test wppsi iv + rompecabezas de madera + cubos khos",
+  "1003015869 - Tijera","1003019482 - Tinta para marcador","1003033745 - Tinta para sello",
+  "1003082904 - Tiza blanca","1003108936 - Tiza de color","1003038667 - Trincheta (cutter)",
+  "1003112293 - Varilla madera pino natural * 23 cm","1003112282 - Varilla porta globo * 50 unidades",
+  "1003112270 - Vela","1003092827 - Vela de 200 gr","1003060472 - Vela de cumpleano",
+  "1003112096 - Vela de noche blanca larga duracion 1.5 cm* 3.5 cm","1003112268 - Wisc v + cubos kohs"
+];
+
+let articulos = [...CATALOGO_DEFAULT];
+let itemCount = 0;
+
+async function apiCall(params) {
+  const url = SCRIPT_URL + '?t=' + Date.now();
+  const resp = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  });
+  return await resp.json();
+}
+
+async function init() {
+  setConn('wait', 'Conectando...');
+  try {
+    const r = await apiCall({ action: 'get_catalogo' });
+    if (r.ok && r.catalogo && r.catalogo.length) articulos = r.catalogo;
+    setConn('ok', 'Conectado');
+  } catch(e) {
+    setConn('err', 'Sin conexion al servidor');
+  }
+  const hoy = new Date();
+  document.getElementById('f-fecha').value =
+    hoy.toLocaleDateString('es-AR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  setupFieldAutocomplete('f-area','ac-list-area','ac-wrap-area', AREAS);
+  addItem();
+}
+
+function setConn(type, msg) {
+  const el = document.getElementById('conn-indicator');
+  el.className = 'conn-bar conn-' + type;
+  el.textContent = msg;
+}
+
+function addItem() {
+  itemCount++;
+  const id = itemCount;
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.id = 'item-row-' + id;
+  tr.innerHTML = `
+    <td><div class="ac-wrap" id="ac-wrap-${id}">
+      <input type="text" class="ac-input" placeholder="Escribi para buscar articulo..." autocomplete="off" data-value="" id="ac-input-${id}" />
+      <div class="ac-list" id="ac-list-${id}"></div>
+    </div></td>
+    <td><input type="text" placeholder="Ej: punta fina, azul, N5..." /></td>
+    <td><select>
+      <option value="">-</option>
+      <option>Unidad</option><option>Caja</option><option>Resma</option>
+      <option>Pack</option><option>Rollo</option><option>Block</option>
+      <option>Par</option><option>Set</option><option>Bolsa</option><option>Metro</option>
+    </select></td>
+    <td><input type="number" min="1" value="1" /></td>
+    <td><button class="btn-icon" onclick="document.getElementById('item-row-${id}').remove()" title="Quitar">&#10005;</button></td>
+  `;
+  tbody.appendChild(tr);
+  setupAutocomplete(id);
+}
+
+function setupFieldAutocomplete(inputId, listId, wrapId, options) {
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(listId);
+  let activeIdx = -1;
+  function renderList(query) {
+    const q = query.toLowerCase().trim();
+    let filtered = q ? options.filter(a => a.toLowerCase().includes(q)) : options;
+    if (!filtered.length) { list.innerHTML = '<div class="ac-empty">No se encontraron resultados</div>'; list.classList.add('open'); return; }
+    list.innerHTML = filtered.map((a,i) => {
+      let display = a;
+      if (q) { const idx = a.toLowerCase().indexOf(q); if (idx>=0) display = a.substring(0,idx)+'<mark>'+a.substring(idx,idx+q.length)+'</mark>'+a.substring(idx+q.length); }
+      return `<div class="ac-item" data-value="${a.replace(/"/g,'&quot;')}">${display}</div>`;
+    }).join('');
+    list.classList.add('open'); activeIdx = -1;
+  }
+  function selectItem(v) { input.value=v; input.dataset.value=v; input.classList.add('ac-selected'); list.classList.remove('open'); }
+  input.addEventListener('input', function(){ input.dataset.value=''; input.classList.remove('ac-selected'); renderList(this.value); });
+  input.addEventListener('focus', function(){ renderList(this.value); });
+  input.addEventListener('keydown', function(e){
+    const items = list.querySelectorAll('.ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();activeIdx=Math.min(activeIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===activeIdx));if(items[activeIdx])items[activeIdx].scrollIntoView({block:'nearest'});}
+    else if(e.key==='ArrowUp'){e.preventDefault();activeIdx=Math.max(activeIdx-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===activeIdx));if(items[activeIdx])items[activeIdx].scrollIntoView({block:'nearest'});}
+    else if(e.key==='Enter'){e.preventDefault();if(activeIdx>=0&&items[activeIdx])selectItem(items[activeIdx].dataset.value);}
+    else if(e.key==='Escape')list.classList.remove('open');
+  });
+  list.addEventListener('click', function(e){ const item=e.target.closest('.ac-item'); if(item)selectItem(item.dataset.value); });
+  document.addEventListener('click', function(e){ if(!e.target.closest('#'+wrapId))list.classList.remove('open'); });
+}
+
+function setupAutocomplete(id) {
+  const input = document.getElementById('ac-input-'+id);
+  const list  = document.getElementById('ac-list-'+id);
+  let activeIdx = -1;
+  function renderList(query) {
+    const q = query.toLowerCase().trim();
+    let filtered = q ? articulos.filter(a=>a.toLowerCase().includes(q)) : articulos;
+    if (!filtered.length) { list.innerHTML='<div class="ac-empty">No se encontraron articulos</div>'; list.classList.add('open'); return; }
+    const maxShow = 50;
+    list.innerHTML = filtered.slice(0,maxShow).map((a,i)=>{
+      let display=a;
+      if(q){const idx=a.toLowerCase().indexOf(q);if(idx>=0)display=a.substring(0,idx)+'<mark>'+a.substring(idx,idx+q.length)+'</mark>'+a.substring(idx+q.length);}
+      return `<div class="ac-item" data-value="${a.replace(/"/g,'&quot;')}">${display}</div>`;
+    }).join('');
+    if(filtered.length>maxShow) list.innerHTML+=`<div class="ac-empty">...y ${filtered.length-maxShow} mas. Segui escribiendo.</div>`;
+    list.classList.add('open'); activeIdx=-1;
+  }
+  function selectItem(v){ input.value=v; input.dataset.value=v; input.classList.add('ac-selected'); list.classList.remove('open'); }
+  input.addEventListener('input',function(){ input.dataset.value=''; input.classList.remove('ac-selected'); renderList(this.value); });
+  input.addEventListener('focus',function(){ renderList(this.value); });
+  input.addEventListener('keydown',function(e){
+    const items=list.querySelectorAll('.ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();activeIdx=Math.min(activeIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===activeIdx));if(items[activeIdx])items[activeIdx].scrollIntoView({block:'nearest'});}
+    else if(e.key==='ArrowUp'){e.preventDefault();activeIdx=Math.max(activeIdx-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===activeIdx));if(items[activeIdx])items[activeIdx].scrollIntoView({block:'nearest'});}
+    else if(e.key==='Enter'){e.preventDefault();if(activeIdx>=0&&items[activeIdx])selectItem(items[activeIdx].dataset.value);}
+    else if(e.key==='Escape')list.classList.remove('open');
+  });
+  list.addEventListener('click',function(e){const item=e.target.closest('.ac-item');if(item)selectItem(item.dataset.value);});
+  document.addEventListener('click',function(e){if(!e.target.closest('#ac-wrap-'+id))list.classList.remove('open');});
+}
+
+function getItems() {
+  return [...document.querySelectorAll('#items-body tr')].reduce((acc,row)=>{
+    const acInput = row.querySelector('.ac-input');
+    const artValue = acInput ? acInput.dataset.value : '';
+    const esp = row.querySelectorAll('input[type=text]')[1];
+    const empaque = row.querySelector('select');
+    const cant = row.querySelector('input[type=number]');
+    if (artValue) acc.push({ articulo:artValue, especificacion:esp?.value||'', empaque:empaque?.value||'', cantidad:parseInt(cant?.value)||1 });
+    return acc;
+  }, []);
+}
+
+async function submitPedido() {
+  const sec    = document.getElementById('f-secretaria').value;
+  const area   = document.getElementById('f-area').dataset.value || '';
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const email  = document.getElementById('f-email').value.trim();
+  const obs    = document.getElementById('f-obs').value.trim();
+  const items  = getItems();
+
+  if (!sec)          { alert('Selecciona la Secretaria.'); return; }
+  if (!area)         { alert('Selecciona el Area.'); return; }
+  if (!nombre)       { alert('Ingresa el nombre del solicitante.'); return; }
+  if (!items.length) { alert('Agrega al menos un articulo.'); return; }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const now = new Date();
+  try {
+    const r = await apiCall({
+      action: 'guardar_pedido',
+      fecha:  now.toLocaleDateString('es-AR'),
+      hora:   now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
+      secretaria: sec, area, nombre, email, observaciones: obs,
+      items: JSON.stringify(items)
+    });
+    btn.disabled = false;
+    btn.textContent = 'Enviar pedido';
+    if (r.ok) {
+      document.getElementById('formulario-wrap').style.display = 'none';
+      document.getElementById('success-panel').style.display   = 'block';
+    } else {
+      alert('Error al guardar: ' + (r.error || 'intenta de nuevo'));
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Enviar pedido';
+    alert('Error de conexion. Verifica tu internet e intenta de nuevo.');
+  }
+}
+
+function nuevoFormulario() {
+  document.getElementById('formulario-wrap').style.display = 'block';
+  document.getElementById('success-panel').style.display  = 'none';
+  ['f-secretaria','f-nombre','f-email','f-obs'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.tagName==='SELECT'?el.selectedIndex=0:el.value='';
+  });
+  const a=document.getElementById('f-area'); a.value=''; a.dataset.value=''; a.classList.remove('ac-selected');
+  document.getElementById('items-body').innerHTML='';
+  itemCount=0; addItem();
+}
+
+function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+init();
+</script>
+</body>
+</html>
