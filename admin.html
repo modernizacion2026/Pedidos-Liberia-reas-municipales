@@ -123,6 +123,8 @@
   .last-update{font-size:12px;color:var(--texto-sec);font-weight:500;}
   .footer{background:#2D2D2D;color:rgba(255,255,255,0.6);text-align:center;padding:20px;font-size:12px;margin-top:3rem;}
   .footer a{color:var(--naranja-claro);text-decoration:none;}
+  .btn-link-form{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid var(--naranja-border);border-radius:var(--radio);background:var(--naranja-bg);color:var(--naranja);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+  .btn-link-form:hover{background:var(--naranja);color:white;border-color:var(--naranja);}
   @media(max-width:768px){
     .stats-grid{grid-template-columns:1fr 1fr;}
     .grid-3,.grid-4{grid-template-columns:1fr;}
@@ -144,7 +146,9 @@
       <div class="topbar-sub">Administracion de Pedidos de Libreria</div>
     </div>
   </div>
-  <div id="topbar-right"></div>
+  <div id="topbar-right">
+    <a href="index.html" class="btn-link-form" title="Abrir formulario de pedidos">&#128196; Ver formulario</a>
+  </div>
 </div>
 
 <!-- LOGIN -->
@@ -263,7 +267,7 @@
   </div>
 </div>
 
-<div class="footer">Municipalidad de Jesus Maria</div>
+<div class="footer">Municipalidad de Jesus Maria &middot; <a href="index.html">Formulario de pedidos</a></div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
