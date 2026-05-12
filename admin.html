@@ -153,7 +153,10 @@
   .resumen-header-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;}
   .resumen-title-block h2{font-size:18px;font-weight:800;color:var(--texto);}
   .resumen-title-block p{font-size:13px;color:var(--texto-sec);margin-top:3px;}
-
+  .photo-thumb{width:40px;height:40px;border-radius:var(--radio);object-fit:cover;border:1px solid var(--gris-borde);cursor:pointer;}
+  .photo-thumb:hover{box-shadow:0 0 0 3px rgba(212,83,43,0.2);}
+  .photo-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .photo-modal img{max-width:90%;max-height:90%;border-radius:var(--radio-lg);box-shadow:var(--sombra-lg);}
   @media(max-width:768px){
     .stats-grid{grid-template-columns:1fr 1fr;}
     .grid-3,.grid-4{grid-template-columns:1fr;}
@@ -635,8 +638,8 @@ function verDetalle(id) {
     <div class="modal-row"><span class="lbl">Estado:</span> <span class="status-badge status-${STATUS_COLORS[p.estado]||'pendiente'}">${estadoNorm}</span></div>
     ${p.observaciones?`<div class="modal-row"><span class="lbl">Observaciones:</span> <em>${p.observaciones}</em></div>`:''}
     <div class="items-detail"><table>
-      <thead><tr><th>Articulo</th><th>Especificacion</th><th>Empaque</th><th>Cantidad</th></tr></thead>
-      <tbody>${(p.items||[]).map(it=>`<tr><td>${it.articulo}</td><td>${it.especificacion||'-'}</td><td>${it.empaque||'-'}</td><td style="text-align:center"><strong>${it.cantidad}</strong></td></tr>`).join('')}</tbody>
+      <thead><tr><th>Articulo</th><th>Especificacion</th><th>Empaque</th><th>Cantidad</th></tr>Imagen</th></tr></thead>
+      <tbody>${(p.items||[]).map(it=>`<tr><td>${it.articulo}</td><td>${it.especificacion||'-'}</td><td>${it.empaque||'-'}</td><td style="text-align:center"><strong>${it.cantidad}</strong></td><td>${it.foto?`<img src="${it.foto}" class="photo-thumb" onclick="showPhotoModal('${it.foto.replace(/'/g,"\\'")}')"/>`:'-'}</td></tr>`).join('')}</tbody>
     </table></div>
   `;
   document.getElementById('modal-overlay').classList.add('open');
