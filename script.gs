@@ -102,7 +102,7 @@ function guardarPedido(p) {
   hp.appendRow([id, p.fecha||"", p.hora||"", p.secretaria||"", p.area||"",
     p.nombre||"", p.email||"", p.observaciones||"",
     typeof p.items==="string" ? p.items : JSON.stringify(p.items||[]),
-    "Pendiente", p.dependencia||""]);
+   "Solicitado", p.dependencia||""]);
   return { ok: true, id: id };
 }
 
