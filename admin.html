@@ -861,9 +861,19 @@ async function eliminarUsuario(user) {
   showToast('Usuario eliminado');
 }
 
+
 function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
 
+function showPhotoModal(src) {
+  const div = document.createElement('div');
+  div.className = 'photo-modal';
+  div.onclick = function(){ div.remove(); };
+  div.innerHTML = `<img src="${src}" />`;
+  document.body.appendChild(div);
+}
+
 init();
+
 </script>
 </body>
 </html>
