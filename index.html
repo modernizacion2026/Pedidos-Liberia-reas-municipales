@@ -422,8 +422,7 @@ function addItem() {
   const tbody = document.getElementById('items-body');
   const tr = document.createElement('tr');
   tr.id = 'item-row-' + id;
-  tr.innerHTML = `
-    tr.innerHTML = `
+  tr.innerHTML = `  
     <td data-label="Articulo"><div class="ac-wrap" id="ac-wrap-${id}">
       <input type="text" class="ac-input" placeholder="Escribi para buscar articulo..." autocomplete="off" data-value="" id="ac-input-${id}" />
       <div class="ac-list" id="ac-list-${id}"></div>
