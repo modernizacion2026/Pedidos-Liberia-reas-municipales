@@ -92,11 +92,40 @@
   .footer{background:#2D2D2D;color:rgba(255,255,255,0.6);text-align:center;padding:20px;font-size:12px;margin-top:3rem;}
   .footer a{color:var(--naranja-claro);text-decoration:none;}
   @media(max-width:640px){
-    .grid-2{grid-template-columns:1fr;}
-    .topbar{padding:0 1rem;height:60px;}
-    .topbar-sub{display:none;}
-    .items-table th:nth-child(3),.items-table td:nth-child(3){display:none;}
-    .form-page{padding:0 0.75rem 2rem;margin-top:1.5rem;}
+    @media(max-width:640px){
+  .grid-2{grid-template-columns:1fr;}
+  .topbar{padding:0 1rem;height:60px;}
+  .topbar-sub{display:none;}
+  .form-page{padding:0 0.75rem 2rem;margin-top:1.5rem;}
+
+  /* Tabla de articulos en mobile: cada fila se apila */
+  .items-table thead{display:none;}
+  .items-table tbody tr{
+    display:block;
+    border:1.5px solid var(--gris-borde);
+    border-radius:var(--radio);
+    margin-bottom:12px;
+    padding:10px;
+    background:white;
+  }
+  .items-table td{
+    display:block;
+    border:none;
+    padding:4px 0;
+    font-size:13px;
+  }
+  .items-table td::before{
+    content:attr(data-label);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    color:var(--texto-sec);
+    display:block;
+    margin-bottom:3px;
+  }
+  .items-table td input[type=number]{max-width:100%;}
+  .photo-cell{display:flex;align-items:center;gap:10px;}
+}
   }
 </style>
 </head>
@@ -394,25 +423,26 @@ function addItem() {
   const tr = document.createElement('tr');
   tr.id = 'item-row-' + id;
   tr.innerHTML = `
-    <td><div class="ac-wrap" id="ac-wrap-${id}">
+    tr.innerHTML = `
+    <td data-label="Articulo"><div class="ac-wrap" id="ac-wrap-${id}">
       <input type="text" class="ac-input" placeholder="Escribi para buscar articulo..." autocomplete="off" data-value="" id="ac-input-${id}" />
       <div class="ac-list" id="ac-list-${id}"></div>
     </div></td>
-    <td><input type="text" placeholder="Ej: punta fina, azul, N5..." /></td>
-    <td><select>
+    <td data-label="Especificacion / Marca"><input type="text" placeholder="Ej: punta fina, azul, N5..." /></td>
+    <td data-label="Tipo de empaque"><select>
       <option value="">-</option>
       <option>Unidad</option><option>Caja</option><option>Resma</option>
       <option>Pack</option><option>Rollo</option><option>Block</option>
       <option>Par</option><option>Set</option><option>Bolsa</option><option>Metro</option>
     </select></td>
-    <td><input type="number" min="1" value="1" /></td>
-    <td class="photo-cell">
+    <td data-label="Cantidad"><input type="number" min="1" value="1" /></td>
+    <td data-label="Foto" class="photo-cell">
       <input type="file" accept="image/*" id="photo-input-${id}" style="display:none" onchange="previewPhoto(${id},this)" />
       <div id="photo-preview-${id}">
         <button type="button" class="photo-btn" onclick="document.getElementById('photo-input-${id}').click()" title="Agregar foto">&#128247;</button>
       </div>
     </td>
-    <td><button class="btn-icon" onclick="document.getElementById('item-row-${id}').remove()" title="Quitar">&#10005;</button></td>
+    <td data-label=""><button class="btn-icon" onclick="document.getElementById('item-row-${id}').remove()" title="Quitar">&#10005;</button></td>
   `;
   tbody.appendChild(tr);
   setupAutocomplete(id);
