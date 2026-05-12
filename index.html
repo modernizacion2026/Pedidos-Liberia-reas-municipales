@@ -67,6 +67,11 @@
   .ac-list .ac-empty{padding:12px;font-size:13px;color:var(--texto-sec);text-align:center;}
   .btn-icon{background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:6px;color:var(--texto-sec);font-size:16px;line-height:1;transition:all 0.15s;}
   .btn-icon:hover{background:var(--rojo-bg);color:var(--rojo);}
+  .photo-cell{text-align:center;}
+  .photo-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:2px dashed var(--gris-borde);border-radius:var(--radio);background:var(--gris-claro);color:var(--texto-sec);cursor:pointer;font-size:18px;transition:all 0.2s;}
+  .photo-btn:hover{border-color:var(--naranja);color:var(--naranja);background:var(--naranja-bg);}
+  .photo-btn.has-photo{border-style:solid;border-color:var(--verde-border);background:var(--verde-bg);color:var(--verde);}
+  .photo-preview{width:40px;height:40px;border-radius:var(--radio);object-fit:cover;border:1px solid var(--gris-borde);cursor:pointer;}
   .btn-add{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 16px;border:2px dashed var(--gris-borde);border-radius:var(--radio);background:transparent;color:var(--texto-sec);cursor:pointer;transition:all 0.2s;}
   .btn-add:hover{border-color:var(--naranja);color:var(--naranja);background:var(--naranja-bg);}
   .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,var(--naranja),var(--naranja-oscuro));color:white;border:none;border-radius:var(--radio);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%;margin-top:1rem;box-shadow:0 4px 14px rgba(212,83,43,0.3);}
@@ -150,9 +155,20 @@
           <input type="email" id="f-email" placeholder="correo@jesusmaria.gob.ar" />
         </div>
       </div>
-      <div class="field" style="max-width:260px">
-        <label>Fecha del pedido</label>
-        <input type="text" id="f-fecha" readonly style="background:var(--gris-claro);color:var(--texto-sec);cursor:default;font-weight:600" />
+      <div class="grid-2">
+        <div class="field">
+          <label>Dependencia receptora <span class="req">*</span></label>
+          <select id="f-dependencia">
+            <option value="">Seleccionar...</option>
+            <option>Edificio Centro</option>
+            <option>Obrador (Pa&ntilde;ol)</option>
+            <option>Almafuerte 451 (ex Imei)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fecha del pedido</label>
+          <input type="text" id="f-fecha" readonly style="background:var(--gris-claro);color:var(--texto-sec);cursor:default;font-weight:600" />
+        </div>
       </div>
     </div>
 
@@ -161,11 +177,12 @@
       <table class="items-table">
         <thead>
           <tr>
-            <th style="width:34%">Articulo</th>
-            <th style="width:24%">Especificacion / Marca</th>
-            <th style="width:18%">Tipo de empaque</th>
-            <th style="width:12%">Cantidad</th>
-            <th style="width:8%"></th>
+            <th style="width:30%">Articulo</th>
+            <th style="width:20%">Especificacion / Marca</th>
+            <th style="width:16%">Tipo de empaque</th>
+            <th style="width:10%">Cantidad</th>
+            <th style="width:8%">Foto</th>
+            <th style="width:6%"></th>
           </tr>
         </thead>
         <tbody id="items-body"></tbody>
@@ -389,6 +406,12 @@ function addItem() {
       <option>Par</option><option>Set</option><option>Bolsa</option><option>Metro</option>
     </select></td>
     <td><input type="number" min="1" value="1" /></td>
+    <td class="photo-cell">
+      <input type="file" accept="image/*" id="photo-input-${id}" style="display:none" onchange="previewPhoto(${id},this)" />
+      <div id="photo-preview-${id}">
+        <button type="button" class="photo-btn" onclick="document.getElementById('photo-input-${id}').click()" title="Agregar foto">&#128247;</button>
+      </div>
+    </td>
     <td><button class="btn-icon" onclick="document.getElementById('item-row-${id}').remove()" title="Quitar">&#10005;</button></td>
   `;
   tbody.appendChild(tr);
@@ -455,6 +478,38 @@ function setupAutocomplete(id) {
   document.addEventListener('click',function(e){if(!e.target.closest('#ac-wrap-'+id))list.classList.remove('open');});
 }
 
+function resizeImage(file, maxW, maxH) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW/w, maxH/h);
+          w = Math.round(w*ratio); h = Math.round(h*ratio);
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function previewPhoto(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeImage(file, 400, 400).then(dataUrl => {
+    const container = document.getElementById('photo-preview-'+id);
+    container.innerHTML = `<img src="${dataUrl}" class="photo-preview" onclick="document.getElementById('photo-input-${id}').click()" title="Cambiar foto" />`;
+    container.dataset.photo = dataUrl;
+  });
+}
+
 function getItems() {
   return [...document.querySelectorAll('#items-body tr')].reduce((acc,row)=>{
     const acInput = row.querySelector('.ac-input');
@@ -462,7 +517,9 @@ function getItems() {
     const esp = row.querySelectorAll('input[type=text]')[1];
     const empaque = row.querySelector('select');
     const cant = row.querySelector('input[type=number]');
-    if (artValue) acc.push({ articulo:artValue, especificacion:esp?.value||'', empaque:empaque?.value||'', cantidad:parseInt(cant?.value)||1 });
+    const photoContainer = row.querySelector('[id^="photo-preview-"]');
+    const foto = photoContainer ? (photoContainer.dataset.photo || '') : '';
+    if (artValue) acc.push({ articulo:artValue, especificacion:esp?.value||'', empaque:empaque?.value||'', cantidad:parseInt(cant?.value)||1, foto:foto });
     return acc;
   }, []);
 }
@@ -475,8 +532,11 @@ async function submitPedido() {
   const obs    = document.getElementById('f-obs').value.trim();
   const items  = getItems();
 
+  const dependencia = document.getElementById('f-dependencia').value;
+
   if (!sec)          { alert('Selecciona la Secretaria.'); return; }
   if (!area)         { alert('Selecciona el Area.'); return; }
+  if (!dependencia)  { alert('Selecciona la Dependencia receptora.'); return; }
   if (!nombre)       { alert('Ingresa el nombre del solicitante.'); return; }
   if (!items.length) { alert('Agrega al menos un articulo.'); return; }
 
@@ -491,6 +551,7 @@ async function submitPedido() {
       fecha:  now.toLocaleDateString('es-AR'),
       hora:   now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
       secretaria: sec, area, nombre, email, observaciones: obs,
+      dependencia: dependencia,
       items: JSON.stringify(items)
     });
     btn.disabled = false;
@@ -511,7 +572,7 @@ async function submitPedido() {
 function nuevoFormulario() {
   document.getElementById('formulario-wrap').style.display = 'block';
   document.getElementById('success-panel').style.display  = 'none';
-  ['f-secretaria','f-nombre','f-email','f-obs'].forEach(id=>{
+  ['f-secretaria','f-dependencia','f-nombre','f-email','f-obs'].forEach(id=>{
     const el=document.getElementById(id);
     el.tagName==='SELECT'?el.selectedIndex=0:el.value='';
   });
