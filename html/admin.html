@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin - Pedidos Libreria - Municipalidad de Jesus Maria</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+<div class="top-accent"></div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">JM</div>
+    <div>
+      <div class="topbar-title">Municipalidad de Jesus Maria</div>
+      <div class="topbar-sub">Administracion de Pedidos de Libreria</div>
+    </div>
+  </div>
+  <div id="topbar-right">
+    <a href="../index.html" class="btn-link-form" title="Abrir formulario de pedidos">&#128196; Ver formulario</a>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <h2>Panel de administracion</h2>
+      <p>Ingresa con tu usuario y contrasena para acceder.</p>
+      <div class="login-error" id="login-error">Usuario o contrasena incorrectos.</div>
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="login-user" placeholder="tu usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="field">
+        <label>Contrasena</label>
+        <input type="password" id="login-pass" placeholder="********" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+      <p style="font-size:12px;color:var(--texto-sec);margin-top:1rem;text-align:center;">Olvidaste tu contrasena? Contacta al administrador.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL ADMIN -->
+<div class="page" id="page-admin">
+  <div class="admin-page">
+    <div class="admin-header">
+      <h1>Panel de administracion</h1>
+      <div class="admin-header-right">
+        <span class="user-badge" id="admin-user-badge">-</span>
+        <button class="btn-secondary btn-danger btn-sm" onclick="doLogout()">Cerrar sesion</button>
+      </div>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" id="tab-btn-pedidos" onclick="showAdminTab('pedidos',this)">Pedidos</button>
+      <button class="admin-tab" id="tab-btn-resumen" onclick="showAdminTab('resumen',this)">Pedido unificado</button>
+      <button class="admin-tab" id="tab-btn-catalogo" onclick="showAdminTab('catalogo',this)">Catalogo</button>
+      <button class="admin-tab" id="tab-btn-usuarios" onclick="showAdminTab('usuarios',this)">Usuarios</button>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="admin-subpage active" id="atab-pedidos">
+      <div class="refresh-row">
+        <button class="btn-secondary btn-sm" onclick="recargar()">Actualizar pedidos</button>
+        <span class="last-update" id="last-update">-</span>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="filters-bar">
+        <div class="filter-field"><label>Secretaria</label>
+          <select id="fil-sec" onchange="renderTabla()">
+            <option value="">Todas</option>
+            <option>Intendencia</option><option>Coordinacion de Gestion y Planificacion Estrategica</option>
+            <option>Gobierno</option><option>Promocion Humana</option>
+            <option>Hacienda y Finanzas</option> <option>Desarrollo Urbano</option>
+            <option>Asesoria Letrada</option>
+          </select></div>
+        <div class="filter-field" id="fil-dep-wrap"><label>Dependencia</label>
+          <select id="fil-dep" onchange="renderTabla()">
+            <option value="">Todas</option>
+            <option>Edificio Centro</option>
+            <option>Obrador (Pa&ntilde;ol)</option>
+            <option>Almafuerte 451 (ex Imei)</option>
+             <option>Polideprtivo 17 de Octubre</option>
+             <option>Turismo</option>
+          </select></div>
+        <div class="filter-field"><label>Estado</label>
+          <select id="fil-estado" onchange="renderTabla()">
+            <option value="">Todos</option>
+            <option>Pendiente</option>
+            <option>Solicitado</option>
+            <option>Entregado</option>
+            <option>Rechazado</option>
+          </select></div>
+        <div class="filter-field"><label>Fecha desde</label><input type="date" id="fil-fecha-desde" onchange="renderTabla()" /></div>
+        <div class="filter-field"><label>Fecha hasta</label><input type="date" id="fil-fecha-hasta" onchange="renderTabla()" /></div>
+        <div class="filter-field"><label>Buscar</label><input type="text" id="fil-buscar" placeholder="Nombre, area..." oninput="renderTabla()" /></div>
+        <div class="filter-actions">
+          <button class="btn-secondary btn-sm" onclick="limpiarFiltros()">Limpiar</button>
+          <button class="btn-secondary btn-sm" onclick="exportExcel()">Exportar Excel</button>
+          <button class="btn-secondary btn-sm" onclick="printEntregadosPDF()">Imprimir/PDF Entregados</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Pedidos registrados</h3>
+          <button class="btn-secondary btn-danger btn-sm" onclick="vaciarPedidos()">Vaciar todos</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr>
+            <th>#</th><th>Fecha / Hora</th><th>Solicitante</th>
+            <th>Secretaria</th><th>Area</th><th>Dependencia</th><th>Articulos</th>
+            <th>Estado</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PEDIDO UNIFICADO -->
+    <div class="admin-subpage" id="atab-resumen">
+      <div class="resumen-header-row">
+        <div class="resumen-title-block">
+          <h2>Pedido unificado de articulos</h2>
+          <p>Agrupa todos los articulos de pedidos pendientes, sumando cantidades por articulo.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-secondary btn-sm" onclick="renderResumen()">Actualizar</button>
+          <button class="btn-secondary btn-sm" onclick="exportResumenExcel()">Exportar Excel</button>
+        </div>
+      </div>
+
+      <!-- Filtros del resumen -->
+      <div class="filters-bar" style="margin-bottom:1.25rem;">
+        <div class="filter-field">
+          <label>Dependencia</label>
+          <select id="res-dep" onchange="renderResumen()">
+            <option value="">Todas</option>
+            <option>Edificio Centro</option>
+            <option>Obrador (Pa&ntilde;ol)</option>
+            <option>Almafuerte 451 (ex Imei)</option>
+             <option>Polideportivo 17 de Octubre</option>
+              <option>Turismo</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>Estado de pedidos a incluir</label>
+          <select id="res-estado" onchange="renderResumen()">
+            <option value="Pendiente">Solo Pendientes</option>
+            <option value="Solicitado">Solo Solicitados</option>
+            <option value="">Pendientes + Solicitados</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>Buscar articulo</label>
+          <input type="text" id="res-buscar" placeholder="Nombre o codigo..." oninput="renderResumen()" />
+        </div>
+        <div class="filter-actions">
+          <button class="btn-secondary btn-sm" onclick="limpiarFiltrosResumen()">Limpiar</button>
+        </div>
+      </div>
+
+      <div id="resumen-summary-bar" style="margin-bottom:1rem;"></div>
+
+      <div class="resumen-table-wrap">
+        <table class="resumen-table" id="resumen-table">
+          <thead>
+            <tr>
+              <th style="width:5%">#</th>
+              <th style="width:14%">Codigo</th>
+              <th style="width:35%">Articulo</th>
+              <th style="width:10%;text-align:center">Cantidad<br>total</th>
+              <th style="width:10%">Pedidos</th>
+              <th style="width:26%">Solicitado por</th>
+            </tr>
+          </thead>
+          <tbody id="resumen-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CATALOGO -->
+    <div class="admin-subpage" id="atab-catalogo">
+      <div class="card">
+        <div class="card-title">Articulos del catalogo</div>
+        <div class="catalogo-grid" id="catalogo-grid"></div>
+        <div class="add-cat-row">
+          <input type="text" id="nuevo-art" placeholder="Nuevo articulo (ej: 1003000001 - Descripcion)" onkeydown="if(event.key==='Enter')addArt()" />
+          <button class="btn-secondary" onclick="addArt()">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="admin-subpage" id="atab-usuarios">
+      <div class="usuarios-grid" id="usuarios-grid"></div>
+      <div class="new-user-form" id="new-user-section" style="display:none">
+        <h3>Nuevo usuario</h3>
+        <div class="grid-3">
+          <div class="field"><label>Nombre completo</label><input type="text" id="nu-nombre" placeholder="Juan Perez" /></div>
+          <div class="field"><label>Usuario</label><input type="text" id="nu-user" placeholder="jperez" /></div>
+          <div class="field"><label>Contrasena</label><input type="text" id="nu-pass" placeholder="contrasena123" /></div>
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <div class="field"><label>Rol</label>
+            <select id="nu-rol"><option value="receptor">Receptor</option><option value="admin">Administrador</option></select>
+          </div>
+          <div class="field"><label>Dependencia receptora</label>
+            <select id="nu-dep">
+              <option value="">Todas (admin)</option>
+              <option>Edificio Centro</option>
+              <option>Obrador (Pa&ntilde;ol)</option>
+              <option>Almafuerte 451 (ex Imei)</option>
+              <option>Polideportivo 17 de Octubre</option>
+              <option>Turismo</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:1rem">
+          <button class="btn-primary" style="width:auto" onclick="guardarNuevoUsuario()">Guardar usuario</button>
+          <button class="btn-secondary" onclick="document.getElementById('new-user-section').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+      <button class="btn-secondary" style="margin-top:1rem" onclick="document.getElementById('new-user-section').style.display='block'">+ Nuevo usuario</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Municipalidad de Jesus Maria &middot; <a href="../index.html">Formulario de pedidos</a></div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Detalle del pedido</h3>
+      <button class="btn-icon" onclick="closeModal()" style="font-size:20px">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg">Listo</span></div>
+
+<script src="../js/admin.js"></script>
+</body>
+</html>
+
