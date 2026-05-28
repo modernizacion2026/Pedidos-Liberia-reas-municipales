@@ -302,24 +302,28 @@ function openEntregadosPrintDialog(entregados) {
     overlay.style.zIndex = '1200';
     overlay.style.padding = '16px';
 
-    const options = entregados.map((p, i) => {
-      const numero = p.id || (i + 1);
-      const label = `#${numero} - ${p.fecha} ${p.hora || ''} - ${p.nombre || 'Sin nombre'}`;
-      return `<option value="${i + 1}">${label}</option>`;
-    }).join('');
+    const pedidosConIndice = entregados.map((p, i) => ({ ...p, _idx: i }));
+    const personas = [...new Set(pedidosConIndice.map(p => (p.nombre || 'Sin nombre').trim()))]
+      .sort((a, b) => a.localeCompare(b));
 
     overlay.innerHTML = `
-      <div style="width:100%;max-width:680px;background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 12px 35px rgba(0,0,0,.2);">
+      <div style="width:100%;max-width:760px;background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 12px 35px rgba(0,0,0,.2);">
         <div style="padding:16px 18px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0;font-size:17px;">Imprimir / PDF de entregados</h3>
           <button id="dlg-close" style="border:none;background:none;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
         </div>
         <div style="padding:16px 18px;">
-          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Pedido a imprimir</label>
-          <select id="dlg-pedido" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;margin-bottom:12px;">
-            <option value="0">Todos los entregados (${entregados.length})</option>
-            ${options}
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Buscar persona</label>
+          <input id="dlg-persona-search" type="text" placeholder="Ej: Juan Perez" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;margin-bottom:12px;" />
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Persona</label>
+          <select id="dlg-persona" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;margin-bottom:12px;">
+            <option value="">Todas</option>
           </select>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button id="dlg-sel-all" class="btn-secondary btn-sm" type="button">Seleccionar visibles</button>
+            <button id="dlg-clear-all" class="btn-secondary btn-sm" type="button">Limpiar seleccion</button>
+          </div>
+          <div id="dlg-pedidos-list" style="max-height:230px;overflow:auto;border:1px solid #E5E7EB;border-radius:8px;padding:8px 10px;margin-bottom:12px;background:#FAFAFA;"></div>
           <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Nombre y apellido de quien recibe</label>
           <input id="dlg-recibe" type="text" placeholder="Ej: Juan Perez" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;" />
         </div>
@@ -335,74 +339,100 @@ function openEntregadosPrintDialog(entregados) {
       resolve(result);
     };
 
+    const personaSearchEl = overlay.querySelector('#dlg-persona-search');
+    const personaSelectEl = overlay.querySelector('#dlg-persona');
+    const pedidosListEl = overlay.querySelector('#dlg-pedidos-list');
+
+    function getVisiblePedidos() {
+      const filtroNombre = (personaSearchEl.value || '').trim().toLowerCase();
+      const personaSeleccionada = personaSelectEl.value;
+      return pedidosConIndice.filter((p) => {
+        const nombre = (p.nombre || 'Sin nombre').trim();
+        if (personaSeleccionada && nombre !== personaSeleccionada) return false;
+        if (filtroNombre && !nombre.toLowerCase().includes(filtroNombre)) return false;
+        return true;
+      });
+    }
+
+    function renderPersonas() {
+      const filtroNombre = (personaSearchEl.value || '').trim().toLowerCase();
+      const opciones = personas
+        .filter(nombre => !filtroNombre || nombre.toLowerCase().includes(filtroNombre))
+        .map(nombre => `<option value="${nombre.replace(/"/g, '&quot;')}">${nombre}</option>`)
+        .join('');
+      const valorActual = personaSelectEl.value;
+      personaSelectEl.innerHTML = `<option value="">Todas</option>${opciones}`;
+      if (valorActual && [...personaSelectEl.options].some(o => o.value === valorActual)) {
+        personaSelectEl.value = valorActual;
+      }
+    }
+
+    function renderPedidos() {
+      const visibles = getVisiblePedidos();
+      if (!visibles.length) {
+        pedidosListEl.innerHTML = '<div style="font-size:12px;color:#6B7280;padding:8px;">No hay pedidos para ese filtro.</div>';
+        return;
+      }
+      pedidosListEl.innerHTML = visibles.map((p) => {
+        const numero = p.id || (p._idx + 1);
+        return `
+          <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 4px;border-bottom:1px solid #E5E7EB;cursor:pointer;">
+            <input type="checkbox" class="dlg-pedido-check" value="${p._idx}" />
+            <span style="font-size:12px;line-height:1.35;">
+              <strong>#${numero}</strong> - ${(p.nombre || 'Sin nombre')}<br />
+              <span style="color:#6B7280">${p.fecha} ${p.hora || ''} - ${(p.area || '-')} - ${(p.dependencia || '-')}</span>
+            </span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    renderPersonas();
+    renderPedidos();
+
     overlay.addEventListener('click', (ev) => {
       if (ev.target === overlay) close(null);
+    });
+    personaSearchEl.addEventListener('input', () => {
+      renderPersonas();
+      renderPedidos();
+    });
+    personaSelectEl.addEventListener('change', renderPedidos);
+    overlay.querySelector('#dlg-sel-all').addEventListener('click', () => {
+      overlay.querySelectorAll('.dlg-pedido-check').forEach(chk => { chk.checked = true; });
+    });
+    overlay.querySelector('#dlg-clear-all').addEventListener('click', () => {
+      overlay.querySelectorAll('.dlg-pedido-check').forEach(chk => { chk.checked = false; });
     });
     overlay.querySelector('#dlg-close').addEventListener('click', () => close(null));
     overlay.querySelector('#dlg-cancel').addEventListener('click', () => close(null));
     overlay.querySelector('#dlg-ok').addEventListener('click', () => {
-      const pedidoValue = overlay.querySelector('#dlg-pedido').value;
       const recibeNombre = overlay.querySelector('#dlg-recibe').value.trim();
       if (!recibeNombre) {
         showToast('Debes indicar quien recibe para generar el PDF');
         return;
       }
-      let pedidosParaImprimir = [];
-      if (pedidoValue === '0') {
-        pedidosParaImprimir = entregados;
-      } else {
-        const idx = parseInt(pedidoValue, 10) - 1;
-        if (idx < 0 || idx >= entregados.length) {
-          showToast('Seleccion invalida');
-          return;
-        }
-        pedidosParaImprimir = [entregados[idx]];
+      const seleccionados = [...overlay.querySelectorAll('.dlg-pedido-check:checked')]
+        .map(chk => parseInt(chk.value, 10))
+        .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < entregados.length);
+      if (!seleccionados.length) {
+        showToast('Selecciona al menos un pedido para imprimir');
+        return;
       }
+      const pedidosParaImprimir = seleccionados.map(idx => entregados[idx]);
       close({ pedidosParaImprimir, recibeNombre });
     });
 
     document.body.appendChild(overlay);
     const inputRecibe = overlay.querySelector('#dlg-recibe');
-    inputRecibe.focus();
-    inputRecibe.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') overlay.querySelector('#dlg-ok').click();
-      if (ev.key === 'Escape') close(null);
+    personaSearchEl.focus();
+    [personaSearchEl, inputRecibe].forEach((el) => {
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') overlay.querySelector('#dlg-ok').click();
+        if (ev.key === 'Escape') close(null);
+      });
     });
   });
-}
-
-function fallbackSelectEntregados(entregados) {
-  const opciones = entregados.map((p, i) => {
-    const numero = p.id || (i + 1);
-    return `${i + 1}) #${numero} - ${p.fecha} ${p.hora || ''} - ${p.nombre || 'Sin nombre'}`;
-  }).join('\n');
-
-  const seleccion = prompt(
-    `Selecciona que pedido imprimir:\n0) Todos los entregados\n${opciones}\n\nIngresa un numero de la lista o 0 para todos:`,
-    '0'
-  );
-  if (seleccion === null) return null;
-
-  const valorSeleccion = seleccion.trim();
-  let pedidosParaImprimir = [];
-  if (!valorSeleccion || valorSeleccion === '0') {
-    pedidosParaImprimir = entregados;
-  } else {
-    const idx = parseInt(valorSeleccion, 10);
-    if (!Number.isInteger(idx) || idx < 1 || idx > entregados.length) {
-      showToast('Seleccion invalida. Usa un numero de la lista.');
-      return null;
-    }
-    pedidosParaImprimir = [entregados[idx - 1]];
-  }
-
-  const recibeNombre = (prompt('Nombre y apellido de quien recibe:', '') || '').trim();
-  if (!recibeNombre) {
-    showToast('Debes indicar quien recibe para generar el PDF');
-    return null;
-  }
-
-  return { pedidosParaImprimir, recibeNombre };
 }
 
 async function printEntregadosPDF() {
@@ -420,10 +450,8 @@ async function printEntregadosPDF() {
   try {
     selection = await openEntregadosPrintDialog(entregados);
   } catch (e) {
-    selection = null;
-  }
-  if (!selection) {
-    selection = fallbackSelectEntregados(entregados);
+    showToast('No se pudo abrir el selector de pedidos');
+    return;
   }
   if (!selection) return;
   const { pedidosParaImprimir, recibeNombre } = selection;
