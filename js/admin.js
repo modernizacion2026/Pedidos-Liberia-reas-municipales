@@ -290,7 +290,88 @@ function exportExcel() {
   showToast('Excel descargado');
 }
 
-function printEntregadosPDF() {
+function openEntregadosPrintDialog(entregados) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(0,0,0,0.45)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '1200';
+    overlay.style.padding = '16px';
+
+    const options = entregados.map((p, i) => {
+      const numero = p.id || (i + 1);
+      const label = `#${numero} - ${p.fecha} ${p.hora || ''} - ${p.nombre || 'Sin nombre'}`;
+      return `<option value="${i + 1}">${label}</option>`;
+    }).join('');
+
+    overlay.innerHTML = `
+      <div style="width:100%;max-width:680px;background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 12px 35px rgba(0,0,0,.2);">
+        <div style="padding:16px 18px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;font-size:17px;">Imprimir / PDF de entregados</h3>
+          <button id="dlg-close" style="border:none;background:none;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+        </div>
+        <div style="padding:16px 18px;">
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Pedido a imprimir</label>
+          <select id="dlg-pedido" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;margin-bottom:12px;">
+            <option value="0">Todos los entregados (${entregados.length})</option>
+            ${options}
+          </select>
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#6B7280;">Nombre y apellido de quien recibe</label>
+          <input id="dlg-recibe" type="text" placeholder="Ej: Juan Perez" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;" />
+        </div>
+        <div style="padding:14px 18px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end;">
+          <button id="dlg-cancel" class="btn-secondary">Cancelar</button>
+          <button id="dlg-ok" class="btn-primary" style="width:auto;margin-top:0;">Generar PDF</button>
+        </div>
+      </div>
+    `;
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) close(null);
+    });
+    overlay.querySelector('#dlg-close').addEventListener('click', () => close(null));
+    overlay.querySelector('#dlg-cancel').addEventListener('click', () => close(null));
+    overlay.querySelector('#dlg-ok').addEventListener('click', () => {
+      const pedidoValue = overlay.querySelector('#dlg-pedido').value;
+      const recibeNombre = overlay.querySelector('#dlg-recibe').value.trim();
+      if (!recibeNombre) {
+        showToast('Debes indicar quien recibe para generar el PDF');
+        return;
+      }
+      let pedidosParaImprimir = [];
+      if (pedidoValue === '0') {
+        pedidosParaImprimir = entregados;
+      } else {
+        const idx = parseInt(pedidoValue, 10) - 1;
+        if (idx < 0 || idx >= entregados.length) {
+          showToast('Seleccion invalida');
+          return;
+        }
+        pedidosParaImprimir = [entregados[idx]];
+      }
+      close({ pedidosParaImprimir, recibeNombre });
+    });
+
+    document.body.appendChild(overlay);
+    const inputRecibe = overlay.querySelector('#dlg-recibe');
+    inputRecibe.focus();
+    inputRecibe.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') overlay.querySelector('#dlg-ok').click();
+      if (ev.key === 'Escape') close(null);
+    });
+  });
+}
+
+async function printEntregadosPDF() {
   const entregados = getFiltered().filter(p => {
     const estadoNorm = (p.estado === 'Aprobado') ? 'Solicitado' : p.estado;
     return estadoNorm === 'Entregado';
@@ -301,15 +382,13 @@ function printEntregadosPDF() {
     return;
   }
 
-  const recibeNombre = (prompt('Nombre y apellido de quien recibe:', '') || '').trim();
-  if (!recibeNombre) {
-    showToast('Debes indicar quien recibe para generar el PDF');
-    return;
-  }
+  const selection = await openEntregadosPrintDialog(entregados);
+  if (!selection) return;
+  const { pedidosParaImprimir, recibeNombre } = selection;
 
   const generado = new Date().toLocaleString('es-AR');
   const fechaFirma = new Date().toLocaleDateString('es-AR');
-  const filas = entregados.map((p, i) => {
+  const filas = pedidosParaImprimir.map((p, i) => {
     const items = (p.items || []).map(it => `${it.articulo} (${it.cantidad})`).join(', ');
     return `
       <tr>
@@ -362,11 +441,11 @@ function printEntregadosPDF() {
           <div class="brand-fallback" style="display:none;">JM</div>
           <div>
             <h1>Municipalidad de Jesus Maria</h1>
-            <div class="sub">Listado de pedidos entregados</div>
+            <div class="sub">${pedidosParaImprimir.length === 1 ? 'Pedido entregado' : 'Listado de pedidos entregados'}</div>
           </div>
         </div>
       </div>
-      <p>Generado: ${generado} - Total pedidos entregados: ${entregados.length}</p>
+      <p>Generado: ${generado} - Total pedidos: ${pedidosParaImprimir.length}</p>
       <table class="avoid-break">
         <thead>
           <tr>
