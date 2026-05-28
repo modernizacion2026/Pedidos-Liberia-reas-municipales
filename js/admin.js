@@ -371,6 +371,40 @@ function openEntregadosPrintDialog(entregados) {
   });
 }
 
+function fallbackSelectEntregados(entregados) {
+  const opciones = entregados.map((p, i) => {
+    const numero = p.id || (i + 1);
+    return `${i + 1}) #${numero} - ${p.fecha} ${p.hora || ''} - ${p.nombre || 'Sin nombre'}`;
+  }).join('\n');
+
+  const seleccion = prompt(
+    `Selecciona que pedido imprimir:\n0) Todos los entregados\n${opciones}\n\nIngresa un numero de la lista o 0 para todos:`,
+    '0'
+  );
+  if (seleccion === null) return null;
+
+  const valorSeleccion = seleccion.trim();
+  let pedidosParaImprimir = [];
+  if (!valorSeleccion || valorSeleccion === '0') {
+    pedidosParaImprimir = entregados;
+  } else {
+    const idx = parseInt(valorSeleccion, 10);
+    if (!Number.isInteger(idx) || idx < 1 || idx > entregados.length) {
+      showToast('Seleccion invalida. Usa un numero de la lista.');
+      return null;
+    }
+    pedidosParaImprimir = [entregados[idx - 1]];
+  }
+
+  const recibeNombre = (prompt('Nombre y apellido de quien recibe:', '') || '').trim();
+  if (!recibeNombre) {
+    showToast('Debes indicar quien recibe para generar el PDF');
+    return null;
+  }
+
+  return { pedidosParaImprimir, recibeNombre };
+}
+
 async function printEntregadosPDF() {
   const entregados = getFiltered().filter(p => {
     const estadoNorm = (p.estado === 'Aprobado') ? 'Solicitado' : p.estado;
@@ -382,7 +416,15 @@ async function printEntregadosPDF() {
     return;
   }
 
-  const selection = await openEntregadosPrintDialog(entregados);
+  let selection = null;
+  try {
+    selection = await openEntregadosPrintDialog(entregados);
+  } catch (e) {
+    selection = null;
+  }
+  if (!selection) {
+    selection = fallbackSelectEntregados(entregados);
+  }
   if (!selection) return;
   const { pedidosParaImprimir, recibeNombre } = selection;
 
