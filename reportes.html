@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Analítica y Control de Gestión</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Paleta exacta de la imagen: Fondos cálidos/neutrales y contrastes suaves */
+            --bg-base: #e6e6e2; 
+            --panel-bg: #f3f3ee;
+            --card-bg: #eaeae4;
+            --text-dark: #2d3436;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            /* Sombras orgánicas y profundas para el efecto 3D */
+            --shadow-premium: inset 1px 1px 0px rgba(255,255,255,0.6), 
+                              9px 9px 20px rgba(163, 163, 153, 0.7), 
+                              -9px -9px 20px rgba(255, 255, 255, 0.9);
+            --shadow-inset: inset 3px 3px 7px rgba(0,0,0,0.05), inset -3px -3px 7px rgba(255,255,255,0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Segoe UI', serif; /* Tipografía elegante como la imagen */
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-dark);
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Encabezado */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 10px 15px;
+        }
+
+        .header-info h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a252c;
+            letter-spacing: -0.5px;
+        }
+
+        .header-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .btn-volver {
+            background: linear-gradient(135deg, #4d8680, #36615c);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: var(--border-radius-md);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.1), inset 1px 1px 0px rgba(255,255,255,0.2);
+        }
+
+        .btn-volver:hover {
+            transform: translateY(-2px);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Panel de Filtros Almendrado */
+        .filters-panel {
+            background: var(--panel-bg);
+            padding: 24px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-premium);
+            margin-bottom: 35px;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 12px 14px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 13px;
+            color: var(--text-dark);
+            outline: none;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-inset);
+        }
+
+        /* Tarjetas KPI Idénticas en Relieve y Esquinas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f5f5f0, #e1e1da);
+            padding: 24px 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.6);
+            position: relative;
+        }
+
+        /* Detalles de barra lateral de color según la tarjeta */
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25%;
+            height: 50%;
+            width: 5px;
+            border-radius: 0 4px 4px 0;
+        }
+        .metric-card.total::before { background-color: #2b5c8f; }
+        .metric-card.entregados::before { background-color: #3b9388; }
+        .metric-card.pendientes::before { background-color: #dfa867; }
+
+        .metric-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+
+        .metric-value {
+            font-size: 44px;
+            font-weight: 700;
+            color: #1a252c;
+        }
+
+        .metric-img {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));
+        }
+
+        /* Contenedores de Gráficos Estilo Galería */
+        .chart-card {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-premium);
+            margin-bottom: 35px;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .charts-sub-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 968px) {
+            .charts-sub-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-card h2 {
+            font-size: 16px;
+            color: #1a252c;
+            margin-bottom: 24px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 340px;
+        }
+
+        /* Tabla Ejecutiva */
+        .table-card {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-premium);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-inset);
+            background: var(--card-bg);
+            padding: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            color: #555;
+            padding: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid #d4d4cb;
+            letter-spacing: 0.03em;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 13px;
+            border-bottom: 1px solid #dfdfd6;
+            color: var(--text-dark);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: var(--shadow-inset);
+        }
+        .badge-solicitado { background-color: #e1ecf7; color: #2b5c8f; }
+        .badge-pendiente { background-color: #fcf3e3; color: #b87d3b; }
+        .badge-entregado { background-color: #e3f2ef; color: #28756c; }
+        .badge-total { background-color: #e6e6e2; color: #444; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-container">
+        <div class="header-info">
+            <h1>Centro de Analítica y Control de Gestión</h1>
+            <p>Indicadores automatizados de consumo e insumos para estas áreas municipales</p>
+        </div>
+        <a href="admin.html" class="btn-volver">← Volver al Panel Principal</a>
+    </div>
+
+    <div class="filters-panel">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>BUSCAR USUARIO</label>
+                <input type="text" id="txtBuscar" placeholder="Escriba un nombre...">
+            </div>
+            <div class="filter-group">
+                <label>FECHA DESDE</label>
+                <input type="date" id="fechaDesde" value="2026-01-01">
+            </div>
+            <div class="filter-group">
+                <label>FECHA HASTA</label>
+                <input type="date" id="fechaHasta" value="2026-12-31">
+            </div>
+            <div class="filter-group">
+                <label>SECRETARÍA</label>
+                <select id="selectSecretaria"><option value="Todas">Todas</option></select>
+            </div>
+            <div class="filter-group">
+                <label>ÁREA / DEPENDENCIA</label>
+                <select id="selectArea"><option value="Todas">Todas</option></select>
+            </div>
+            <div class="filter-group">
+                <label>ESTADO DEL PEDIDO</label>
+                <select id="selectEstado">
+                    <option value="Todos">Todos</option>
+                    <option value="Solicitado">Solicitado</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Entregado">Entregado</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card total">
+            <div>
+                <div class="metric-title">TOTAL PEDIDOS</div>
+                <div class="metric-value" id="totalPedidos">0</div>
+            </div>
+            <img class="metric-img" src="https://cdn-icons-png.flaticon.com/512/4072/4072007.png" alt="Cajas">
+        </div>
+        <div class="metric-card entregados">
+            <div>
+                <div class="metric-title">PEDIDOS ENTREGADOS</div>
+                <div class="metric-value" id="pedidosEntregados">0</div>
+            </div>
+            <img class="metric-img" src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" alt="Check">
+        </div>
+        <div class="metric-card pendientes">
+            <div>
+                <div class="metric-title">PEDIDOS PENDIENTES</div>
+                <div class="metric-value" id="pedidosPendientes">0</div>
+            </div>
+            <img class="metric-img" src="https://cdn-icons-png.flaticon.com/512/2331/2331895.png" alt="Pendiente">
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <h2>Top 10 de Insumos Más Solicitados (Cantidades Unificadas)</h2>
+        <div class="chart-container">
+            <canvas id="graficoTopProductos"></canvas>
+        </div>
+    </div>
+
+    <div class="charts-sub-grid">
+        <div class="chart-card">
+            <h2>Demanda por Secretaría</h2>
+            <div class="chart-container">
+                <canvas id="graficoSecretarias"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h2>Distribución por Estado de Solicitud</h2>
+            <div class="chart-container">
+                <canvas id="graficoEstados"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h2>Resumen Operativo por Usuario / Solicitante</h2>
+        <div class="table-responsive" style="margin-top: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuario / Solicitante</th>
+                        <th>Secretaría</th>
+                        <th>Área / Dependencia</th>
+                        <th style="text-align: center;">Solicitados</th>
+                        <th style="text-align: center;">Pendientes</th>
+                        <th style="text-align: center;">Entregados</th>
+                        <th style="text-align: center;">Total Pedidos</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaUsuariosBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Base Simulada de Resguardo
+const bddSimulada = [
+    { fecha: '2026-05-10', usuario: 'Fabiana Adaro', secretaria: 'Gobierno', area: 'Sistemas', estado: 'Entregado', productos: [{nombre: 'Bolígrafo Azul', cant: 15}, {nombre: 'Resma A4', cant: 12}] },
+    { fecha: '2026-05-14', usuario: 'Ana Gómez', secretaria: 'Hacienda', area: 'Compras', estado: 'Pendiente', productos: [{nombre: 'Resma A4', cant: 5}, {nombre: 'Bibliorato Azul', cant: 7}] },
+    { fecha: '2026-05-18', usuario: 'Luis Pérez', secretaria: 'Desarrollo Urbano', area: 'Arquitectura', estado: 'Solicitado', productos: [{nombre: 'Bibliorato Azul', cant: 4}, {nombre: 'Carpeta Escolar', cant: 4}] },
+    { fecha: '2026-05-20', usuario: 'Fabiana Adaro', secretaria: 'Gobierno', area: 'Sistemas', estado: 'Solicitado', productos: [{nombre: 'Resaltador Fluo', cant: 4}] },
+    { fecha: '2026-05-22', usuario: 'Ana Gómez', secretaria: 'Hacienda', area: 'Contaduría', estado: 'Entregado', productos: [{nombre: 'Cinta de Embalar', cant: 3}] }
+];
+
+let pedidosRaw = [];
+try {
+    const localData = localStorage.getItem('pedidos');
+    pedidosRaw = localData ? JSON.parse(localData) : bddSimulada;
+    if(!Array.isArray(pedidosRaw) || pedidosRaw.length === 0) pedidosRaw = bddSimulada;
+} catch(e) {
+    pedidosRaw = bddSimulada;
+}
+
+const pedidos = pedidosRaw.map(p => ({
+    fecha: p.fecha || '2026-01-01',
+    usuario: p.usuario || p.solicitante || 'Desconocido',
+    secretaria: p.secretaria || p.secretaría || 'General',
+    area: p.area || p.dependencia || '-',
+    estado: p.estado || 'Solicitado',
+    productos: p.productos || []
+}));
+
+let chartTop, chartSec, chartEst;
+
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarCombos();
+    document.getElementById('txtBuscar').addEventListener('input', filtrarDatos);
+    document.querySelectorAll('select, input[type="date"]').forEach(el => el.addEventListener('change', filtrarDatos));
+    filtrarDatos();
+});
+
+function inicializarCombos() {
+    const secSelect = document.getElementById('selectSecretaria');
+    const areaSelect = document.getElementById('selectArea');
+    const secretarias = [...new Set(pedidos.map(p => p.secretaria).filter(Boolean))];
+    const areas = [...new Set(pedidos.map(p => p.area).filter(Boolean))];
+    secretarias.forEach(s => secSelect.innerHTML += `<option value="${s}">${s}</option>`);
+    areas.forEach(a => areaSelect.innerHTML += `<option value="${a}">${a}</option>`);
+}
+
+function filtrarDatos() {
+    const buscarTxt = document.getElementById('txtBuscar').value.toLowerCase();
+    const fDesde = document.getElementById('fechaDesde').value;
+    const fHasta = document.getElementById('fechaHasta').value;
+    const selSec = document.getElementById('selectSecretaria').value;
+    const selArea = document.getElementById('selectArea').value;
+    const selEst = document.getElementById('selectEstado').value;
+
+    const datosFiltrados = pedidos.filter(p => {
+        const cumpleUsuario = p.usuario.toLowerCase().includes(buscarTxt);
+        const cumpleFecha = (!fDesde || p.fecha >= fDesde) && (!fHasta || p.fecha <= fHasta);
+        const cumpleSec = selSec === 'Todas' || p.secretaria === selSec;
+        const cumpleArea = selArea === 'Todas' || p.area === selArea;
+        const cumpleEst = selEst === 'Todos' || p.estado === selEst;
+        return cumpleUsuario && cumpleFecha && cumpleSec && cumpleArea && cumpleEst;
+    });
+
+    document.getElementById('totalPedidos').innerText = datosFiltrados.length;
+    document.getElementById('pedidosEntregados').innerText = datosFiltrados.filter(p => p.estado === 'Entregado').length;
+    document.getElementById('pedidosPendientes').innerText = datosFiltrados.filter(p => p.estado === 'Pendiente').length;
+
+    renderizarGraficosArtisticos(datosFiltrados);
+    renderizarTablaPremium(datosFiltrados);
+}
+
+function renderizarGraficosArtisticos(datos) {
+    if(chartTop) chartTop.destroy();
+    if(chartSec) chartSec.destroy();
+    if(chartEst) chartEst.destroy();
+
+    // Insumos
+    const productosMap = {};
+    datos.forEach(p => {
+        if(p.productos) {
+            p.productos.forEach(prod => {
+                const nombre = typeof prod === 'object' ? prod.nombre : prod;
+                const cant = typeof prod === 'object' ? parseInt(prod.cant || 1) : 1;
+                if(nombre) productosMap[nombre] = (productosMap[nombre] || 0) + cant;
+            });
+        }
+    });
+    const topProd = Object.entries(productosMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+
+    // Secretarías
+    const secMap = {};
+    datos.forEach(p => { if(p.secretaria) secMap[p.secretaria] = (secMap[p.secretaria] || 0) + 1; });
+
+    // Estados
+    const estMap = { 'Solicitado': 0, 'Pendiente': 0, 'Entregado': 0 };
+    datos.forEach(p => { if(p.estado && p.estado in estMap) estMap[p.estado]++; });
+
+    // --- GENERACIÓN DE DEGRADADOS CROMÁTICOS MULTICOLOR (IGUAL A LA IMAGEN) ---
+    const ctxTop = document.getElementById('graficoTopProductos').getContext('2d');
+    
+    // Degradado complejo horizontal: Azul Marino -> Teal -> Toque Ocre/Oro abajo
+    const gradienteH = ctxTop.createLinearGradient(0, 0, 600, 0);
+    gradienteH.addColorStop(0, '#102a43'); 
+    gradienteH.addColorStop(0.4, '#1b6b7a'); 
+    gradienteH.addColorStop(0.8, '#289488'); 
+    gradienteH.addColorStop(1, '#dfa867');
+
+    const ctxSec = document.getElementById('graficoSecretarias').getContext('2d');
+    const gradienteV = ctxSec.createLinearGradient(0, 300, 0, 0);
+    gradienteV.addColorStop(0, '#0f2b46');
+    gradienteV.addColorStop(1, '#3b7bb0');
+
+    // 1. Gráfico Horizontal de Productos
+    chartTop = new Chart(ctxTop, {
+        type: 'bar',
+        data: {
+            labels: topProd.map(x => x[0]),
+            datasets: [{
+                data: topProd.map(x => x[1]),
+                backgroundColor: gradienteH,
+                borderRadius: 8,
+                barThickness: 14
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                x: { grid: { color: '#dbdbd3' }, ticks: { color: '#555' } }, 
+                y: { grid: { display: false }, ticks: { color: '#333', font: { weight: '600' } } } 
+            }
+        }
+    });
+
+    // 2. Gráfico Vertical de Secretarías
+    chartSec = new Chart(ctxSec, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(secMap),
+            datasets: [{ data: Object.values(secMap), backgroundColor: gradienteV, borderRadius: 8, barThickness: 28 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                x: { grid: { display: false }, ticks: { color: '#333' } }, 
+                y: { grid: { color: '#dbdbd3' }, ticks: { stepSize: 1, color: '#555' } } 
+            }
+        }
+    });
+
+    // 3. Gráfico de Dona de Estados (Anillo interior grueso y estilizado)
+    const ctxEst = document.getElementById('graficoEstados').getContext('2d');
+    chartEst = new Chart(ctxEst, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(estMap),
+            datasets: [{
+                data: Object.values(estMap),
+                backgroundColor: ['#2b5c8f', '#dfa867', '#3b9388'],
+                borderWidth: 4,
+                borderColor: '#f3f3ee'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '76%',
+            plugins: { 
+                legend: { position: 'bottom', labels: { padding: 20, font: { size: 12 }, boxWidth: 10 } } 
+            }
+        }
+    });
+}
+
+function renderizarTablaPremium(datos) {
+    const tbody = document.getElementById('tablaUsuariosBody');
+    tbody.innerHTML = '';
+    const resumen = {};
+
+    datos.forEach(p => {
+        if(!p.usuario) return;
+        if(!resumen[p.usuario]) {
+            resumen[p.usuario] = { secretaria: p.secretaria, area: p.area, solicitado: 0, pendiente: 0, entregado: 0, total: 0 };
+        }
+        resumen[p.usuario].total++;
+        if(p.estado === 'Solicitado') resumen[p.usuario].solicitado++;
+        if(p.estado === 'Pendiente') resumen[p.usuario].pendiente++;
+        if(p.estado === 'Entregado') resumen[p.usuario].entregado++;
+    });
+
+    if(Object.keys(resumen).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#7f8c8d; padding:20px;">Sin registros.</td></tr>`;
+        return;
+    }
+
+    Object.entries(resumen).forEach(([user, info]) => {
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight: 700; color: #1a252c;">${user}</td>
+                <td>${info.secretaria}</td>
+                <td>${info.area}</td>
+                <td style="text-align: center;"><span class="badge badge-solicitado">${info.solicitado}</span></td>
+                <td style="text-align: center;"><span class="badge badge-pendiente">${info.pendiente}</span></td>
+                <td style="text-align: center;"><span class="badge badge-entregado">${info.entregado}</span></td>
+                <td style="text-align: center;"><span class="badge badge-total">${info.total}</span></td>
+            </tr>
+        `;
+    });
+}
+</script>
+</body>
+</html>
