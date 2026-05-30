@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --naranja:#E55A1C;--naranja-dark:#C4480E;--naranja-light:#F07040;
@@ -261,8 +262,10 @@ select{
 }
 .status-select.ss-pend{background-color:#FFFBEB;color:#92400E;border-color:#FDE68A;}
 .status-select.ss-apro{background-color:var(--teal-bg);color:#0E7A74;border-color:#A7E8E5;}
+.status-select.ss-unif{background-color:#EEF2FF;color:#4338CA;border-color:#C7D2FE;}
 .status-select.ss-entr{background-color:var(--verde-bg);color:#166534;border-color:#BBF7D0;}
 .status-select.ss-rech{background-color:var(--rojo-bg);color:#991B1B;border-color:var(--rojo-border);}
+.status-select:disabled{cursor:not-allowed;opacity:.72;background-image:none;}
 
 /* ─────────────────────────────────────────
    PEDIDOS TAB (full list + filters)
@@ -276,6 +279,27 @@ select{
 .ff label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gris-400);margin:0;}
 .ff select,.ff input{padding:8px 11px;font-size:13px;}
 .ff-actions{display:flex;gap:6px;align-items:flex-end;}
+.export-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;}
+.export-tools .hint{font-size:12px;color:var(--gris-400);font-weight:600;}
+.export-tools.hidden{display:none;}
+.sel-check{width:16px;height:16px;accent-color:var(--teal);cursor:pointer;}
+.sel-check:disabled{cursor:not-allowed;opacity:.4;}
+.export-scope{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.export-scope select{width:auto;min-width:180px;padding:7px 30px 7px 11px;font-size:12.5px;}
+.print-area{background:white;color:#111827;}
+.print-title{font-size:18px;font-weight:800;margin:0 0 4px;}
+.print-meta{font-size:12px;color:#6B7280;margin-bottom:14px;}
+.print-area table{width:100%;border-collapse:collapse;font-size:11px;}
+.print-area th,.print-area td{border:1px solid #D1D5DB;padding:6px 8px;text-align:left;vertical-align:top;}
+.print-area th{background:#F3F4F6;text-transform:uppercase;font-size:10px;letter-spacing:.04em;}
+
+@media print{
+  body *{visibility:hidden!important;}
+  #print-root,#print-root *{visibility:visible!important;}
+  #print-root{position:absolute;left:0;top:0;width:100%;padding:0;background:white;}
+  .no-print{display:none!important;}
+  @page{size:A4 portrait;margin:12mm;}
+}
 
 /* ─────────────────────────────────────────
    CATÁLOGO
@@ -414,6 +438,142 @@ select{
   .dgrid{grid-template-columns:1fr;}
   .dfield.span2{grid-column:span 1;}
 }
+
+/* ── VISUAL REFRESH ADMIN ── */
+body{
+  background:
+    linear-gradient(180deg,rgba(229,90,28,.08) 0,rgba(26,173,164,.06) 38%,rgba(248,249,250,1) 100%),
+    #F6F7F9;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0 0 auto 0;
+  height:5px;
+  background:linear-gradient(90deg,var(--naranja),var(--teal),var(--verde),var(--amarillo));
+  z-index:500;
+}
+.topbar{
+  height:68px;
+  background:linear-gradient(135deg,#263238 0%,#1F2933 48%,#123E42 100%);
+  border-bottom:none;
+  box-shadow:0 10px 30px rgba(17,24,39,.18);
+}
+.topbar-title{color:#fff;font-size:14px;}
+.topbar-sub{color:rgba(255,255,255,.66);}
+.topbar-logo,.topbar-avatar,.login-logo{
+  background:linear-gradient(135deg,var(--naranja-light),var(--naranja-dark));
+  box-shadow:0 8px 22px rgba(229,90,28,.34);
+}
+.nav-btn{color:rgba(255,255,255,.72);}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,.10);}
+.nav-btn.active{color:#fff;background:rgba(255,255,255,.14);}
+.nav-btn.active-teal{
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#fff;
+  box-shadow:0 8px 22px rgba(26,173,164,.30);
+}
+.topbar-user{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.12);}
+.btn-logout{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff;}
+.btn-logout:hover{background:rgba(229,57,53,.16);border-color:rgba(255,205,210,.45);color:#fff;}
+.admin-wrap{padding-top:2rem;}
+.sec-header{
+  background:white;
+  border:1px solid rgba(222,226,230,.85);
+  border-left:5px solid var(--teal);
+  border-radius:var(--r);
+  padding:1rem 1.2rem;
+  box-shadow:var(--sombra-sm);
+}
+.sec-header h2{font-size:22px;color:#172026;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--teal),#0F766E);
+  box-shadow:0 8px 20px rgba(26,173,164,.28);
+}
+.btn-secondary{
+  border-color:#DDE5EA;
+  background:linear-gradient(180deg,#fff,#F8FAFC);
+  color:#334155;
+  box-shadow:0 1px 2px rgba(15,23,42,.05);
+}
+.btn-secondary:hover{
+  background:#EFFCFB;
+  border-color:rgba(26,173,164,.45);
+  color:#0F766E;
+  transform:translateY(-1px);
+}
+.btn-danger{background:#FFF1F1;border-color:#F5B6B6;color:#B42318;}
+.btn-danger:hover{background:#FEE2E2;border-color:#EF4444;color:#991B1B;}
+.filters-bar,.export-tools,.card,.card-table,.stat-simple,.card-art-top,.card-chart,.card-pie,.new-user-form,.user-card{
+  border-color:#DDE5EA;
+  box-shadow:0 10px 26px rgba(15,23,42,.07);
+}
+.filters-bar{
+  background:linear-gradient(180deg,#FFFFFF,#F9FBFC);
+  border-left:4px solid var(--naranja);
+}
+.ff label{color:#64748B;}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{
+  border-color:#DDE5EA;
+  background:#FFFFFF;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--teal);
+  box-shadow:0 0 0 4px rgba(26,173,164,.13);
+}
+.card-table{
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.card-table-header{
+  background:linear-gradient(90deg,#F8FAFC,#EEF8F7);
+  border-bottom:1px solid #DDE5EA;
+}
+.card-table-header h3{color:#172026;font-size:15px;}
+.admin-table{min-width:1040px;}
+.admin-table th{
+  background:#EAF2F2;
+  color:#475569;
+  border-bottom:2px solid #D1E2E1;
+}
+.admin-table td{background:#fff;}
+.admin-table tbody tr:nth-child(even) td{background:#FBFDFD;}
+.admin-table tbody tr:hover td{background:#FFF7ED;}
+.admin-table td:first-child,.admin-table th:first-child{text-align:center;width:44px;}
+.admin-table th:nth-last-child(2),.admin-table td:nth-last-child(2){min-width:145px;}
+.admin-table th:last-child,.admin-table td:last-child{min-width:160px;white-space:nowrap;}
+.status-select,.sbadge{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);
+}
+.status-select.ss-apro,.sbadge-apro{background:#E0F7F5;color:#08756E;border-color:#8EDFDA;}
+.status-select.ss-pend,.sbadge-pend{background:#FFF3D6;color:#9A5B00;border-color:#F8D486;}
+.status-select.ss-unif{background:#EEF2FF;color:#3730A3;border-color:#BFCBFF;}
+.status-select.ss-entr,.sbadge-entr{background:#EAF8EA;color:#166534;border-color:#ACDFAF;}
+.status-select.ss-rech,.sbadge-rech{background:#FFEAEA;color:#9F1D1D;border-color:#F5B6B6;}
+.login-card{
+  border:none;
+  box-shadow:0 24px 70px rgba(15,23,42,.18);
+  background:linear-gradient(180deg,#FFFFFF 0%,#F9FBFC 100%);
+}
+.login-card::before{
+  content:'';
+  display:block;
+  height:4px;
+  margin:-2.5rem -2.5rem 2rem;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;
+  background:linear-gradient(90deg,var(--naranja),var(--teal),var(--verde));
+}
+.stat-simple,.card-art-top,.card-chart,.card-pie{transition:transform .15s,box-shadow .15s;}
+.stat-simple:hover,.card-art-top:hover,.card-chart:hover,.card-pie:hover{transform:translateY(-2px);box-shadow:var(--sombra-md);}
+.toast{background:#172026;border:1px solid rgba(255,255,255,.08);}
+.footer{background:linear-gradient(135deg,#263238,#123E42);color:rgba(255,255,255,.62);}
+.footer strong{color:#fff;}
+@media(max-width:760px){
+  .topbar{height:auto;min-height:68px;align-items:flex-start;padding:12px 1rem;flex-wrap:wrap;}
+  .topbar-nav{order:3;width:100%;overflow-x:auto;padding-top:8px;}
+  .nav-btn{white-space:nowrap;}
+  .sec-header-right{width:100%;overflow-x:auto;padding-bottom:2px;}
+}
 </style>
 </head>
 <body>
@@ -521,26 +681,8 @@ select{
       <div class="dash-top-row" id="dash-top-row">
         <!-- renderizado por JS -->
       </div>
-
-      <!-- pedidos recientes -->
-      <div class="dash-bottom">
-        <div class="card-table">
-          <div class="card-table-header">
-            <h3>Pedidos Recientes</h3>
-            <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn-secondary btn-danger btn-sm" onclick="vaciarPedidos()">Vaciar todos</button>
-            </div>
-          </div>
-          <table class="admin-table">
-            <thead><tr>
-              <th>PEDIDO#</th><th>FECHA</th><th>SOLICITANTE</th>
-              <th>SECRETARÍA</th><th>DEPENDENCIA</th><th>ESTADO</th><th>ACCIONES</th>
-            </tr></thead>
-            <tbody id="dash-tbody"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
+
 
     <!-- ── PEDIDOS (lista completa + filtros) ── -->
     <div class="admin-subpage" id="atab-pedidos">
@@ -549,6 +691,8 @@ select{
         <div class="sec-header-right">
           <button class="btn-secondary btn-sm" onclick="recargar()">↻ Actualizar</button>
           <button class="btn-secondary btn-sm" onclick="exportExcel()">⬇ Excel</button>
+          <button class="btn-secondary btn-sm" id="btn-print-ped" onclick="imprimirSeleccion()">Imprimir</button>
+          <button class="btn-secondary btn-sm" id="btn-pdf-ped" onclick="descargarPDFSeleccion()">Descargar PDF</button>
           <button class="btn-secondary btn-danger btn-sm" onclick="vaciarPedidos()">🗑 Vaciar</button>
           <span class="last-upd" id="last-upd-ped">—</span>
         </div>
@@ -565,14 +709,28 @@ select{
         <div class="ff"><label>Estado</label>
           <select id="fil-estado" onchange="renderPedidosTab()">
             <option value="">Todos</option>
-            <option>Pendiente</option><option>Aprobado</option>
-            <option>Entregado</option><option>Rechazado</option>
+            <option>Solicitado</option><option>Pendiente</option>
+            <option>Unificado</option><option>Entregado</option><option>Rechazado</option>
           </select></div>
+        <div class="ff"><label>Usuario / area</label>
+          <select id="fil-usuario" onchange="renderPedidosTab()"><option value="">Todos</option></select></div>
+        <div class="ff"><label>Articulo</label>
+          <select id="fil-articulo" onchange="renderPedidosTab()"><option value="">Todos</option></select></div>
         <div class="ff"><label>Fecha desde</label><input type="date" id="fil-desde" onchange="renderPedidosTab()" /></div>
         <div class="ff"><label>Fecha hasta</label><input type="date" id="fil-hasta" onchange="renderPedidosTab()" /></div>
         <div class="ff"><label>Buscar</label><input type="text" id="fil-bus" placeholder="Nombre, área..." oninput="renderPedidosTab()" /></div>
         <div class="ff-actions">
           <button class="btn-secondary btn-sm" onclick="limpiarFiltros()">✕ Limpiar</button>
+        </div>
+      </div>
+      <div class="export-tools" id="export-tools">
+        <div class="export-scope">
+          <button class="btn-secondary btn-sm" onclick="toggleSelectVisible(true)">Seleccionar visibles</button>
+          <button class="btn-secondary btn-sm" onclick="toggleSelectVisible(false)">Limpiar seleccion</button>
+          <span class="hint" id="selection-count">0 seleccionados</span>
+        </div>
+        <div class="export-scope" id="export-state-hint">
+          <span class="hint">Impresion y PDF disponibles al filtrar por Entregado o Unificado.</span>
         </div>
       </div>
       <div class="card-table">
@@ -581,6 +739,7 @@ select{
         </div>
         <table class="admin-table">
           <thead><tr>
+            <th><input type="checkbox" class="sel-check" id="select-all-ped" onchange="toggleSelectVisible(this.checked)" /></th>
             <th>#</th><th>Fecha / Hora</th><th>Solicitante</th>
             <th>Secretaría</th><th>Área</th><th>Artículos</th>
             <th>Estado</th><th>Acciones</th>
@@ -592,7 +751,13 @@ select{
 
     <!-- ── UNIFICADO ── -->
     <div class="admin-subpage" id="atab-unificado">
-      <div class="sec-header"><h2>Vista Unificada</h2></div>
+      <div class="sec-header">
+        <h2>Vista Unificada</h2>
+        <div class="sec-header-right">
+          <button class="btn-secondary btn-sm" onclick="imprimirUnificado()">Imprimir</button>
+          <button class="btn-secondary btn-sm" onclick="descargarPDFUnificado()">Descargar PDF</button>
+        </div>
+      </div>
       <div class="card">
         <div class="ctitle-bar"><span class="ctitle-dot"></span>Artículos consolidados por cantidad total solicitada</div>
         <div id="unif-content"></div>
@@ -662,10 +827,13 @@ select{
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwaPywYsHfWNq0o6W-U3GR5JrTRs15IjpmHXOa4GHquFh9fWYqyCzS8bWx0tfQbRDNPNg/exec';
 // ═══════════════════════════════════════════
 
-const SC={'Pendiente':'ss-pend','Aprobado':'ss-apro','Entregado':'ss-entr','Rechazado':'ss-rech'};
-const SB={'Pendiente':'sbadge-pend','Aprobado':'sbadge-apro','Entregado':'sbadge-entr','Rechazado':'sbadge-rech'};
+const ESTADOS = ['Solicitado','Pendiente','Unificado','Entregado','Rechazado'];
+const ESTADO_LEGACY = { Aprobado:'Solicitado' };
+const SC = { Solicitado:'ss-apro', Pendiente:'ss-pend', Unificado:'ss-unif', Entregado:'ss-entr', Rechazado:'ss-rech', Aprobado:'ss-apro' };
+const SB = { Solicitado:'sbadge-apro', Pendiente:'sbadge-pend', Unificado:'sbadge-apro', Entregado:'sbadge-entr', Rechazado:'sbadge-rech', Aprobado:'sbadge-apro' };
 let pedidos=[],articulos=[],usuarios={},currentUser=null;
-let dashFilter='', chartLine=null, chartPie=null;
+let dashFilter='', chartLine=null, chartPie=null, chartMini=null;
+let selectedPedidoIds = new Set();
 
 async function apiCall(params){
   const url=SCRIPT_URL+'?t='+Date.now();
@@ -693,7 +861,7 @@ async function doLogin(){
       document.getElementById('topbar-actions').style.display='flex';
       showPage('admin');
       await recargar();
-      showTab('dashboard',document.getElementById('nb-dashboard'));
+      showTab('pedidos',document.getElementById('nb-pedidos'));
     } else { err.style.display='block'; }
   }catch(e){ err.textContent='Error de conexión.'; err.style.display='block'; }
 }
@@ -734,6 +902,8 @@ async function recargar(){
     const ts='Actualizado: '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     ['last-upd-dash','last-upd-ped'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ts;});
     renderDashboard();
+    if(document.getElementById('atab-pedidos')?.classList.contains('active')) renderPedidosTab();
+    if(document.getElementById('atab-unificado')?.classList.contains('active')) renderUnificado();
     showToast('Pedidos actualizados ('+pedidos.length+')');
   }catch(e){ showToast('Error al actualizar.'); }
 }
@@ -741,7 +911,7 @@ async function recargar(){
 /* ─────── DASHBOARD ─────── */
 function getDashFiltered(){
   if(!dashFilter) return pedidos;
-  return pedidos.filter(p=>p.estado===dashFilter);
+  return pedidos.filter(p=>estadoPedido(p)===dashFilter);
 }
 
 function setQuickFilter(f, btn){
@@ -753,14 +923,13 @@ function setQuickFilter(f, btn){
 
 function renderDashboard(){
   renderDashStats();
-  renderDashTable();
   renderCharts();
 }
 
 function renderDashStats(){
   const data=getDashFiltered();
   const total=data.length;
-  const pend=data.filter(p=>p.estado==='Pendiente').length;
+  const pend=data.filter(p=>estadoPedido(p)==='Pendiente').length;
 
   // artículos top
   const artMap={};
@@ -856,11 +1025,13 @@ function renderCharts(){
 
 function renderMiniChart(data){
   const c=document.getElementById('miniChart'); if(!c) return;
+  if(chartMini){chartMini.destroy();chartMini=null;}
+  if(window.Chart && Chart.getChart(c)) Chart.getChart(c).destroy();
   const ctx=c.getContext('2d');
   // generate fake weekly trend from data count
   const base=Math.max(1,data.length);
   const pts=[base*.6,base*.7,base*.55,base*.8,base*.75,base*.9,base].map(v=>Math.round(v));
-  new Chart(ctx,{
+  chartMini=new Chart(ctx,{
     type:'line',
     data:{labels:['','','','','','',''],datasets:[{data:pts,borderColor:'rgba(26,173,164,.6)',backgroundColor:'rgba(26,173,164,.1)',borderWidth:1.5,fill:true,tension:.4,pointRadius:0}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:600}}
@@ -898,42 +1069,51 @@ function renderPieChart(data){
   });
 }
 
-function renderDashTable(){
-  const data=getDashFiltered().slice(0,20);
-  const tbody=document.getElementById('dash-tbody');
-  if(!data.length){
-    tbody.innerHTML='<tr class="empty-row"><td colspan="7">No hay pedidos.</td></tr>'; return;
-  }
-  tbody.innerHTML=data.map(p=>`
-    <tr>
-      <td style="font-weight:700;color:var(--gris-500);font-size:12px">${p.id||'—'}</td>
-      <td style="white-space:nowrap;font-size:12.5px">${p.fecha} ${p.hora}</td>
-      <td style="font-weight:600">${p.nombre}</td>
-      <td style="font-size:12.5px;color:var(--gris-500)">${(p.secretaria||'').substring(0,18)}</td>
-      <td style="font-size:12.5px;color:var(--gris-500)">${(p.area||'').substring(0,18)}</td>
-      <td><span class="sbadge ${SB[p.estado]||'sbadge-pend'}">${p.estado}</span></td>
-      <td style="white-space:nowrap">
-        <button class="btn-icon" title="Editar" onclick="verDetalle('${p.id}')">✏</button>
-        <button class="btn-icon" title="Ver" onclick="verDetalle('${p.id}')">ℹ</button>
-        <button class="btn-icon" style="color:var(--rojo)" title="Eliminar" onclick="deletePedido('${p.id}')">🗑</button>
-      </td>
-    </tr>
-  `).join('');
+/* PEDIDOS TAB */
+function estadoPedido(p){ return ESTADO_LEGACY[p.estado] || p.estado || 'Pendiente'; }
+function canExportCurrentView(){ return ['Entregado','Unificado'].includes(document.getElementById('fil-estado')?.value); }
+function itemNombre(item){ return item.articulo || item.nombre || ''; }
+function escapeHtml(v){ return String(v ?? '').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function ensureDefaultPedidosFilter(){
+  const est=document.getElementById('fil-estado');
+  if(est && !est.value) est.value='Solicitado';
 }
 
-/* ─────── PEDIDOS TAB ─────── */
-function getFiltered(){
-  const sec=document.getElementById('fil-sec').value;
-  const est=document.getElementById('fil-estado').value;
-  const desde=document.getElementById('fil-desde').value;
-  const hasta=document.getElementById('fil-hasta').value;
-  const bus=document.getElementById('fil-bus').value.toLowerCase();
+function updateDynamicFilters(){
+  fillSelect('fil-usuario', getFiltered({ ignoreUsuario:true }).map(p => p.area || p.nombre || 'Sin usuario'));
+  const arts=[];
+  getFiltered({ ignoreArticulo:true }).forEach(p => (p.items||[]).forEach(it => arts.push(itemNombre(it))));
+  fillSelect('fil-articulo', arts);
+}
+
+function fillSelect(id, values){
+  const el=document.getElementById(id); if(!el) return;
+  const current=el.value;
+  const unique=[...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  el.innerHTML='<option value="">Todos</option>'+unique.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if(unique.includes(current)) el.value=current;
+}
+
+function getFiltered(opts={}){
+  const sec=document.getElementById('fil-sec')?.value || '';
+  const est=document.getElementById('fil-estado')?.value || '';
+  const usuario=opts.ignoreUsuario ? '' : (document.getElementById('fil-usuario')?.value || '');
+  const articulo=opts.ignoreArticulo ? '' : (document.getElementById('fil-articulo')?.value || '');
+  const desde=document.getElementById('fil-desde')?.value || '';
+  const hasta=document.getElementById('fil-hasta')?.value || '';
+  const bus=(document.getElementById('fil-bus')?.value || '').toLowerCase();
   return pedidos.filter(p=>{
+    const estado=estadoPedido(p);
+    const usuarioPedido=p.area || p.nombre || 'Sin usuario';
+    const items=p.items || [];
     if(sec&&p.secretaria!==sec) return false;
-    if(est&&p.estado!==est) return false;
-    if(bus&&!(p.nombre.toLowerCase().includes(bus)||p.area.toLowerCase().includes(bus)||p.secretaria.toLowerCase().includes(bus))) return false;
+    if(est&&estado!==est) return false;
+    if(usuario&&usuarioPedido!==usuario) return false;
+    if(articulo&&!items.some(it=>itemNombre(it)===articulo)) return false;
+    if(bus&&!((p.nombre||'').toLowerCase().includes(bus)||(p.area||'').toLowerCase().includes(bus)||(p.secretaria||'').toLowerCase().includes(bus)||items.some(it=>itemNombre(it).toLowerCase().includes(bus)))) return false;
     if(desde||hasta){
-      const pts=p.fecha.split('/');
+      const pts=String(p.fecha||'').split('/');
       if(pts.length===3){
         const fd=new Date(pts[2],pts[1]-1,pts[0]);
         if(desde&&fd<new Date(desde)) return false;
@@ -945,60 +1125,106 @@ function getFiltered(){
 }
 
 function limpiarFiltros(){
-  ['fil-sec','fil-estado','fil-desde','fil-hasta','fil-bus'].forEach(id=>{
-    const el=document.getElementById(id);
+  ['fil-sec','fil-usuario','fil-articulo','fil-desde','fil-hasta','fil-bus'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
     el.tagName==='SELECT'?el.selectedIndex=0:el.value='';
   });
+  document.getElementById('fil-estado').value='Solicitado';
+  selectedPedidoIds.clear();
   renderPedidosTab();
 }
 
-function renderPedidosTab(){
+function togglePedidoSelection(id, checked){
+  checked ? selectedPedidoIds.add(String(id)) : selectedPedidoIds.delete(String(id));
+  updateSelectionCount();
+}
+
+function toggleSelectVisible(checked){
+  getFiltered().forEach(p=> checked ? selectedPedidoIds.add(String(p.id)) : selectedPedidoIds.delete(String(p.id)));
+  renderPedidosTab(false);
+}
+
+function updateSelectionCount(){
+  const count=document.getElementById('selection-count');
+  if(count) count.textContent=selectedPedidoIds.size+' seleccionados';
+  const all=document.getElementById('select-all-ped');
+  if(all){
+    const visible=getFiltered();
+    all.checked=visible.length>0 && visible.every(p=>selectedPedidoIds.has(String(p.id)));
+    all.indeterminate=visible.some(p=>selectedPedidoIds.has(String(p.id))) && !all.checked;
+  }
+}
+
+function renderPedidosTab(refreshFilters=true){
+  ensureDefaultPedidosFilter();
+  if(refreshFilters) updateDynamicFilters();
   const data=getFiltered();
+  const exportHint=document.getElementById('export-state-hint');
+  if(exportHint) exportHint.style.display=canExportCurrentView() ? 'none' : '';
+  ['btn-print-ped','btn-pdf-ped'].forEach(id=>{const b=document.getElementById(id); if(b) b.disabled=!canExportCurrentView();});
   document.getElementById('ped-count').textContent='Pedidos registrados ('+data.length+')';
   const tbody=document.getElementById('ped-tbody');
   if(!data.length){
-    tbody.innerHTML='<tr class="empty-row"><td colspan="8">No hay pedidos que coincidan.</td></tr>'; return;
+    tbody.innerHTML='<tr class="empty-row"><td colspan="9">No hay pedidos que coincidan.</td></tr>';
+    updateSelectionCount();
+    return;
   }
-  tbody.innerHTML=data.map((p,i)=>`
+  tbody.innerHTML=data.map((p,i)=>{
+    const estado=estadoPedido(p);
+    const isEntregado=estado==='Entregado';
+    const checked=selectedPedidoIds.has(String(p.id)) ? 'checked' : '';
+    return `
     <tr>
+      <td><input type="checkbox" class="sel-check pedido-check" ${checked} onchange="togglePedidoSelection('${p.id}',this.checked)" /></td>
       <td style="color:var(--gris-400);font-size:12px;font-weight:700">${data.length-i}</td>
       <td style="white-space:nowrap">
-        <div style="font-weight:700;font-size:13px">${p.fecha}</div>
-        <div style="color:var(--gris-400);font-size:11.5px">${p.hora}</div>
+        <div style="font-weight:700;font-size:13px">${escapeHtml(p.fecha)}</div>
+        <div style="color:var(--gris-400);font-size:11.5px">${escapeHtml(p.hora)}</div>
       </td>
       <td>
-        <div style="font-weight:700">${p.nombre}</div>
-        ${p.email?`<div style="color:var(--gris-400);font-size:11.5px">${p.email}</div>`:''}
+        <div style="font-weight:700">${escapeHtml(p.nombre)}</div>
+        ${p.email?`<div style="color:var(--gris-400);font-size:11.5px">${escapeHtml(p.email)}</div>`:''}
       </td>
-      <td style="font-size:12.5px;color:var(--gris-600)">${(p.secretaria||'').substring(0,20)}</td>
-      <td style="font-size:12.5px;color:var(--gris-600)">${p.area||''}</td>
+      <td style="font-size:12.5px;color:var(--gris-600)">${escapeHtml((p.secretaria||'').substring(0,20))}</td>
+      <td style="font-size:12.5px;color:var(--gris-600)">${escapeHtml(p.area||'')}</td>
       <td style="font-size:12.5px">
         <strong style="color:var(--teal)">${p.items?p.items.length:0}</strong> art.<br>
-        <span style="color:var(--gris-400);font-size:11px">${p.items?p.items.map(it=>it.articulo.split(' - ')[1]||it.articulo).join(', ').substring(0,40)+'…':''}</span>
+        <span style="color:var(--gris-400);font-size:11px">${escapeHtml(p.items?p.items.map(it=>itemNombre(it).split(' - ')[1]||itemNombre(it)).join(', ').substring(0,40)+'...':'')}</span>
       </td>
       <td>
-        <select class="status-select ${SC[p.estado]||'ss-pend'}" onchange="changeStatus('${p.id}',this.value,this)">
-          ${['Pendiente','Aprobado','Entregado','Rechazado'].map(s=>`<option ${p.estado===s?'selected':''}>${s}</option>`).join('')}
+        <select class="status-select ${SC[estado]||'ss-pend'}" onchange="changeStatus('${p.id}',this.value,this)" ${isEntregado?'disabled title="Estado bloqueado: pedido entregado"':''}>
+          ${ESTADOS.map(s=>`<option ${estado===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </td>
       <td style="white-space:nowrap">
         <button class="btn-secondary btn-sm" onclick="verDetalle('${p.id}')">Ver</button>
-        <button class="btn-secondary btn-danger btn-sm" style="margin-left:4px" onclick="deletePedido('${p.id}')">✕</button>
+        <button class="btn-secondary btn-danger btn-sm" style="margin-left:4px" onclick="deletePedido('${p.id}')">Eliminar</button>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
+  updateSelectionCount();
 }
 
 async function changeStatus(id,newStatus,sel){
+  const p=pedidos.find(x=>String(x.id)===String(id));
+  if(p && estadoPedido(p)==='Entregado'){
+    sel.value='Entregado'; sel.disabled=true;
+    showToast('Este pedido ya fue entregado y no puede modificarse');
+    return;
+  }
   try{
     await apiCall({action:'update_estado',id,estado:newStatus});
-    const p=pedidos.find(x=>String(x.id)===String(id));
     if(p) p.estado=newStatus;
-    sel.className='status-select '+SC[newStatus];
+    sel.className='status-select '+(SC[newStatus]||'ss-pend');
+    if(newStatus==='Entregado'){
+      sel.disabled=true;
+      sel.title='Estado bloqueado: pedido entregado';
+    }
+    renderDashboard();
+    renderPedidosTab();
     showToast('Estado actualizado: '+newStatus);
   }catch(e){showToast('Error al actualizar estado');}
 }
-
 async function deletePedido(id){
   if(!confirm('¿Eliminar este pedido?')) return;
   try{
@@ -1027,7 +1253,7 @@ function verDetalle(id){
       <div class="dfield"><div class="dlbl">Fecha</div><div class="dval">${p.fecha}</div></div>
       <div class="dfield"><div class="dlbl">Hora</div><div class="dval">${p.hora}</div></div>
       <div class="dfield"><div class="dlbl">Solicitante</div><div class="dval">${p.nombre}</div></div>
-      <div class="dfield"><div class="dlbl">Estado</div><div class="dval"><span class="sbadge ${SB[p.estado]||'sbadge-pend'}">${p.estado}</span></div></div>
+      <div class="dfield"><div class="dlbl">Estado</div><div class="dval"><span class="sbadge ${SB[estadoPedido(p)]||'sbadge-pend'}">${estadoPedido(p)}</span></div></div>
       <div class="dfield"><div class="dlbl">Secretaría</div><div class="dval">${p.secretaria||'—'}</div></div>
       <div class="dfield"><div class="dlbl">Área</div><div class="dval">${p.area||'—'}</div></div>
       ${p.email?`<div class="dfield span2"><div class="dlbl">Email</div><div class="dval">${p.email}</div></div>`:''}
@@ -1050,7 +1276,7 @@ function exportExcel(){
   const data=getFiltered();
   if(!data.length){showToast('No hay pedidos para exportar');return;}
   const rows=[];
-  data.forEach(p=>(p.items||[]).forEach(it=>rows.push({'Fecha':p.fecha,'Hora':p.hora,'Estado':p.estado,'Secretaría':p.secretaria,'Área':p.area,'Solicitante':p.nombre,'Email':p.email||'','Artículo':it.articulo,'Especificación':it.especificacion||'','Empaque':it.empaque||'','Cantidad':it.cantidad,'Observaciones':p.observaciones||''})));
+  data.forEach(p=>(p.items||[]).forEach(it=>rows.push({'Fecha':p.fecha,'Hora':p.hora,'Estado':estadoPedido(p),'Secretaría':p.secretaria,'Área':p.area,'Solicitante':p.nombre,'Email':p.email||'','Artículo':it.articulo,'Especificación':it.especificacion||'','Empaque':it.empaque||'','Cantidad':it.cantidad,'Observaciones':p.observaciones||''})));
   const ws=XLSX.utils.json_to_sheet(rows);
   ws['!cols']=[10,8,12,34,34,22,26,28,20,10,28].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new();
@@ -1060,23 +1286,124 @@ function exportExcel(){
   showToast('Excel descargado ✓');
 }
 
-function renderUnificado(){
+function getPedidosParaProcesar(){
+  if(!canExportCurrentView()){
+    showToast('Selecciona estado Entregado o Unificado para imprimir o descargar PDF');
+    return [];
+  }
+  const filtrados=getFiltered();
+  const seleccionados=filtrados.filter(p=>selectedPedidoIds.has(String(p.id)));
+  return seleccionados.length ? seleccionados : filtrados;
+}
+
+function buildPedidosPrintArea(data, titulo){
+  const rows=[];
+  data.forEach(p=>{
+    (p.items&&p.items.length?p.items:[{}]).forEach(it=>rows.push(`
+      <tr>
+        <td>${escapeHtml(p.id)}</td>
+        <td>${escapeHtml((p.fecha||'')+' '+(p.hora||''))}</td>
+        <td>${escapeHtml(p.nombre||'')}</td>
+        <td>${escapeHtml(p.secretaria||'')}</td>
+        <td>${escapeHtml(p.area||'')}</td>
+        <td>${escapeHtml(estadoPedido(p))}</td>
+        <td>${escapeHtml(itemNombre(it)||'-')}</td>
+        <td style="text-align:center">${escapeHtml(it.cantidad||'-')}</td>
+      </tr>`));
+  });
+  return `
+    <div class="print-area" id="print-root">
+      <h1 class="print-title">${escapeHtml(titulo)}</h1>
+      <div class="print-meta">Municipalidad de Jesus Maria - Generado: ${new Date().toLocaleString('es-AR')} - Total pedidos: ${data.length}</div>
+      <table>
+        <thead><tr><th>Pedido</th><th>Fecha / Hora</th><th>Solicitante</th><th>Secretaria</th><th>Area</th><th>Estado</th><th>Articulo</th><th>Cant.</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function buildUnificadoData(sourcePedidos){
   const map={};
-  pedidos.forEach(p=>(p.items||[]).forEach(it=>{
-    const k=it.articulo; map[k]=(map[k]||0)+(parseInt(it.cantidad)||1);
+  sourcePedidos.forEach(p=>(p.items||[]).forEach(it=>{
+    const k=itemNombre(it);
+    if(!k) return;
+    if(!map[k]) map[k]={ articulo:k, cantidad:0, pedidos:0, usuarios:new Set() };
+    map[k].cantidad += parseInt(it.cantidad,10) || 1;
+    map[k].pedidos += 1;
+    map[k].usuarios.add(p.area || p.nombre || 'Sin usuario');
   }));
-  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  return Object.values(map).sort((a,b)=>a.articulo.localeCompare(b.articulo));
+}
+
+function buildUnificadoPrintArea(rows, titulo){
+  return `
+    <div class="print-area" id="print-root">
+      <h1 class="print-title">${escapeHtml(titulo)}</h1>
+      <div class="print-meta">Municipalidad de Jesus Maria - Generado: ${new Date().toLocaleString('es-AR')} - Articulos: ${rows.length}</div>
+      <table>
+        <thead><tr><th>#</th><th>Articulo</th><th>Total solicitado</th><th>Pedidos</th><th>Usuarios / areas</th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.articulo)}</td><td style="text-align:center"><strong>${r.cantidad}</strong></td><td>${r.pedidos}</td><td>${escapeHtml([...r.usuarios].join(', '))}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function printHtml(html){
+  const holder=document.createElement('div');
+  holder.innerHTML=html;
+  document.body.appendChild(holder);
+  window.print();
+  setTimeout(()=>holder.remove(),300);
+}
+
+function imprimirSeleccion(){
+  const data=getPedidosParaProcesar();
+  if(!data.length){ showToast('No hay pedidos para imprimir'); return; }
+  printHtml(buildPedidosPrintArea(data,'Pedidos '+document.getElementById('fil-estado').value));
+}
+
+function descargarPDFSeleccion(){
+  const data=getPedidosParaProcesar();
+  if(!data.length){ showToast('No hay pedidos para exportar'); return; }
+  if(typeof html2pdf==='undefined'){ showToast('No se cargo html2pdf.js'); return; }
+  const wrap=document.createElement('div');
+  wrap.style.position='fixed'; wrap.style.left='-9999px'; wrap.style.top='0';
+  wrap.innerHTML=buildPedidosPrintArea(data,'Pedidos '+document.getElementById('fil-estado').value);
+  document.body.appendChild(wrap);
+  html2pdf().set({ margin:10, filename:'Pedidos_'+document.getElementById('fil-estado').value+'.pdf', image:{type:'jpeg',quality:.98}, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(wrap.firstElementChild).save().then(()=>wrap.remove());
+}
+
+function getPedidosUnificados(){ return pedidos.filter(p=>estadoPedido(p)==='Unificado'); }
+function imprimirUnificado(){
+  const rows=buildUnificadoData(getPedidosUnificados());
+  if(!rows.length){ showToast('No hay pedidos Unificados para imprimir'); return; }
+  printHtml(buildUnificadoPrintArea(rows,'Pedido Unificado'));
+}
+function descargarPDFUnificado(){
+  const rows=buildUnificadoData(getPedidosUnificados());
+  if(!rows.length){ showToast('No hay pedidos Unificados para exportar'); return; }
+  if(typeof html2pdf==='undefined'){ showToast('No se cargo html2pdf.js'); return; }
+  const wrap=document.createElement('div');
+  wrap.style.position='fixed'; wrap.style.left='-9999px'; wrap.style.top='0';
+  wrap.innerHTML=buildUnificadoPrintArea(rows,'Pedido Unificado');
+  document.body.appendChild(wrap);
+  html2pdf().set({ margin:10, filename:'Pedido_Unificado.pdf', image:{type:'jpeg',quality:.98}, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(wrap.firstElementChild).save().then(()=>wrap.remove());
+}
+
+function renderUnificado(){
+  const entries=buildUnificadoData(getPedidosUnificados());
   if(!entries.length){
-    document.getElementById('unif-content').innerHTML='<p style="color:var(--gris-400);font-size:13px">No hay pedidos cargados.</p>';return;
+    document.getElementById('unif-content').innerHTML='<p style="color:var(--gris-400);font-size:13px">No hay pedidos con estado Unificado.</p>';return;
   }
   document.getElementById('unif-content').innerHTML=`
-    <table class="admin-table unif-table">
-      <thead><tr><th>#</th><th>Artículo</th><th style="text-align:center">Total solicitado</th></tr></thead>
-      <tbody>${entries.map(([art,cnt],i)=>`
+    <table class="admin-table unif-table" id="unif-table">
+      <thead><tr><th>#</th><th>Articulo</th><th style="text-align:center">Total solicitado</th><th>Pedidos</th><th>Usuarios / areas</th></tr></thead>
+      <tbody>${entries.map((r,i)=>`
         <tr>
           <td style="color:var(--gris-400);font-size:12px">${i+1}</td>
-          <td style="font-weight:600">${art}</td>
-          <td style="text-align:center"><strong style="color:var(--teal);font-size:15px">${cnt}</strong></td>
+          <td style="font-weight:600">${escapeHtml(r.articulo)}</td>
+          <td style="text-align:center"><strong style="color:var(--teal);font-size:15px">${r.cantidad}</strong></td>
+          <td>${r.pedidos}</td>
+          <td style="font-size:12px;color:var(--gris-500)">${escapeHtml([...r.usuarios].join(', '))}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
