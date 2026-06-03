@@ -562,7 +562,7 @@ function getResumenData() {
   const depFil    = document.getElementById('res-dep').value;
   const estadoFil = document.getElementById('res-estado').value;  // '' = ambos, o 'Pendiente'/'Solicitado'
   const busFil    = document.getElementById('res-buscar').value.toLowerCase().trim();
-
+const busFilnombre    = document.getElementById('res-buscar').value.toLowerCase().trim();
   // Filtrar pedidos por dependencia y estado
   let pedidosFil = pedidos.filter(p => {
     if (depFil && p.dependencia !== depFil) return false;
@@ -572,6 +572,11 @@ function getResumenData() {
       if (estadoNorm !== 'Pendiente' && estadoNorm !== 'Solicitado') return false;
     } else {
       if (estadoNorm !== estadoFil) return false;
+    }
+     if (busFilnombre) {
+      const nombreMatch = (p.nombre || '').toLowerCase().includes(busFil);
+      const areaMatch   = (p.dependencia || '').toLowerCase().includes(busFil);
+      if (!nombreMatch && !areaMatch) return false;
     }
     return true;
   });
