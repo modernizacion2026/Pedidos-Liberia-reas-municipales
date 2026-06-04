@@ -483,7 +483,8 @@ function getResumenData() {
   const estadoFil   = document.getElementById('res-estado').value;   // '' = ambos
   const busArticulo = document.getElementById('res-buscar').value.toLowerCase().trim();  // filtra articulos
   const busNombre   = (document.getElementById('res-nombre') ? document.getElementById('res-nombre').value : '').toLowerCase().trim(); // filtra solicitante/area
-
+  const resFechaDesde = document.getElementById('res-fecha-desde').value;
+  const resFechaHasta = document.getElementById('res-fecha-hasta').value;
   // 1. Filtrar pedidos por dependencia, estado Y nombre/area del solicitante
   let pedidosFil = pedidos.filter(p => {
     if (depFil && p.dependencia !== depFil) return false;
@@ -500,6 +501,14 @@ function getResumenData() {
       const dep    = (p.dependencia || '').toLowerCase();
       if (!nombre.includes(busNombre) && !area.includes(busNombre) && !dep.includes(busNombre)) return false;
     }
+    if (resFechaDesde || resFechaHasta) {
+  const partes = (p.fecha || '').split('/');
+  if (partes.length === 3) {
+    const fd = new Date(partes[2], partes[1]-1, partes[0]);
+    if (resFechaDesde && fd < new Date(resFechaDesde)) return false;
+    if (resFechaHasta && fd > new Date(resFechaHasta)) return false;
+  }
+}
     return true;
   });
 
@@ -558,6 +567,8 @@ function limpiarFiltrosResumen() {
   document.getElementById('res-dep').selectedIndex    = 0;
   document.getElementById('res-estado').selectedIndex = 0;
   document.getElementById('res-buscar').value         = '';
+  document.getElementById('res-fecha-desde').value = '';
+  document.getElementById('res-fecha-hasta').value = '';
   const resNombre = document.getElementById('res-nombre');
   if (resNombre) resNombre.value = '';
   renderResumen();
