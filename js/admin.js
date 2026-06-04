@@ -501,7 +501,7 @@ function getResumenData() {
   const dep    = (p.dependencia || '').toLowerCase().trim();
   if (!nombre.includes(busNombre) && !area.includes(busNombre) && !dep.includes(busNombre)) return false;
 }
-Ese fix es menor pero el Fix 1 es el que realmente rompe las fechas — los IDs duplicados hacen que getElementById agarre siempre el primer elemento que encuentra (el del tab Pedidos), entonces la fecha del resumen nunca se lee correctamente.
+
     if (resFechaDesde || resFechaHasta) {
   const partes = (p.fecha || '').split('/');
   if (partes.length === 3) {
