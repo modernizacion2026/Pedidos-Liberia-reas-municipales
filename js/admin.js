@@ -1,4 +1,4 @@
-﻿// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  CONFIGURACION  ← PEGAR TU URL AQUI
 // ════════════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiQGeLGs8zdt7wj16E7m6LtKqf5S_pNrjds7FF7HkjdSuAB6dZZJF3uJkSgSU_jp02Rw/exec';
@@ -132,7 +132,6 @@ function getFiltered() {
   return filtered.filter(p => {
     if (sec && p.secretaria !== sec) return false;
     if (dep && p.dependencia !== dep) return false;
-    // Normalizar: "Aprobado" viejo = "Solicitado"
     const estadoNorm = (p.estado === 'Aprobado') ? 'Solicitado' : p.estado;
     if (est && estadoNorm !== est) return false;
     if (bus && !(
@@ -256,7 +255,7 @@ function verDetalle(id) {
     <div class="modal-row"><span class="lbl">Estado:</span> <span class="status-badge status-${STATUS_COLORS[p.estado]||'pendiente'}">${estadoNorm}</span></div>
     ${p.observaciones?`<div class="modal-row"><span class="lbl">Observaciones:</span> <em>${p.observaciones}</em></div>`:''}
     <div class="items-detail"><table>
-      <thead><tr><th>Articulo</th><th>Especificacion</th><th>Empaque</th><th>Cantidad</th></tr>Imagen</th></tr></thead>
+      <thead><tr><th>Articulo</th><th>Especificacion</th><th>Empaque</th><th>Cantidad</th><th>Imagen</th></tr></thead>
       <tbody>${(p.items||[]).map(it=>`<tr><td>${it.articulo}</td><td>${it.especificacion||'-'}</td><td>${it.empaque||'-'}</td><td style="text-align:center"><strong>${it.cantidad}</strong></td><td>${it.foto?`<img src="${it.foto}" class="photo-thumb" onclick="showPhotoModal('${it.foto.replace(/'/g,"\\'")}')"/>`:'-'}</td></tr>`).join('')}</tbody>
     </table></div>
   `;
@@ -334,14 +333,11 @@ function openEntregadosPrintDialog(entregados) {
       </div>
     `;
 
-    const close = (result) => {
-      overlay.remove();
-      resolve(result);
-    };
+    const close = (result) => { overlay.remove(); resolve(result); };
 
     const personaSearchEl = overlay.querySelector('#dlg-persona-search');
     const personaSelectEl = overlay.querySelector('#dlg-persona');
-    const pedidosListEl = overlay.querySelector('#dlg-pedidos-list');
+    const pedidosListEl   = overlay.querySelector('#dlg-pedidos-list');
 
     function getVisiblePedidos() {
       const filtroNombre = (personaSearchEl.value || '').trim().toLowerCase();
@@ -382,21 +378,15 @@ function openEntregadosPrintDialog(entregados) {
               <strong>#${numero}</strong> - ${(p.nombre || 'Sin nombre')}<br />
               <span style="color:#6B7280">${p.fecha} ${p.hora || ''} - ${(p.area || '-')} - ${(p.dependencia || '-')}</span>
             </span>
-          </label>
-        `;
+          </label>`;
       }).join('');
     }
 
     renderPersonas();
     renderPedidos();
 
-    overlay.addEventListener('click', (ev) => {
-      if (ev.target === overlay) close(null);
-    });
-    personaSearchEl.addEventListener('input', () => {
-      renderPersonas();
-      renderPedidos();
-    });
+    overlay.addEventListener('click', (ev) => { if (ev.target === overlay) close(null); });
+    personaSearchEl.addEventListener('input', () => { renderPersonas(); renderPedidos(); });
     personaSelectEl.addEventListener('change', renderPedidos);
     overlay.querySelector('#dlg-sel-all').addEventListener('click', () => {
       overlay.querySelectorAll('.dlg-pedido-check').forEach(chk => { chk.checked = true; });
@@ -408,24 +398,17 @@ function openEntregadosPrintDialog(entregados) {
     overlay.querySelector('#dlg-cancel').addEventListener('click', () => close(null));
     overlay.querySelector('#dlg-ok').addEventListener('click', () => {
       const recibeNombre = overlay.querySelector('#dlg-recibe').value.trim();
-      if (!recibeNombre) {
-        showToast('Debes indicar quien recibe para generar el PDF');
-        return;
-      }
+      if (!recibeNombre) { showToast('Debes indicar quien recibe para generar el PDF'); return; }
       const seleccionados = [...overlay.querySelectorAll('.dlg-pedido-check:checked')]
         .map(chk => parseInt(chk.value, 10))
         .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < entregados.length);
-      if (!seleccionados.length) {
-        showToast('Selecciona al menos un pedido para imprimir');
-        return;
-      }
-      const pedidosParaImprimir = seleccionados.map(idx => entregados[idx]);
-      close({ pedidosParaImprimir, recibeNombre });
+      if (!seleccionados.length) { showToast('Selecciona al menos un pedido para imprimir'); return; }
+      close({ pedidosParaImprimir: seleccionados.map(idx => entregados[idx]), recibeNombre });
     });
 
     document.body.appendChild(overlay);
-    const inputRecibe = overlay.querySelector('#dlg-recibe');
     personaSearchEl.focus();
+    const inputRecibe = overlay.querySelector('#dlg-recibe');
     [personaSearchEl, inputRecibe].forEach((el) => {
       el.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') overlay.querySelector('#dlg-ok').click();
@@ -440,114 +423,51 @@ async function printEntregadosPDF() {
     const estadoNorm = (p.estado === 'Aprobado') ? 'Solicitado' : p.estado;
     return estadoNorm === 'Entregado';
   });
-
-  if (!entregados.length) {
-    showToast('No hay pedidos entregados para imprimir');
-    return;
-  }
+  if (!entregados.length) { showToast('No hay pedidos entregados para imprimir'); return; }
 
   let selection = null;
-  try {
-    selection = await openEntregadosPrintDialog(entregados);
-  } catch (e) {
-    showToast('No se pudo abrir el selector de pedidos');
-    return;
-  }
+  try { selection = await openEntregadosPrintDialog(entregados); } catch(e) { showToast('No se pudo abrir el selector de pedidos'); return; }
   if (!selection) return;
   const { pedidosParaImprimir, recibeNombre } = selection;
 
-  const generado = new Date().toLocaleString('es-AR');
+  const generado   = new Date().toLocaleString('es-AR');
   const fechaFirma = new Date().toLocaleDateString('es-AR');
   const filas = pedidosParaImprimir.map((p, i) => {
     const items = (p.items || []).map(it => `${it.articulo} (${it.cantidad})`).join(', ');
-    return `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${p.fecha} ${p.hora || ''}</td>
-        <td>${p.nombre || '-'}</td>
-        <td>${p.secretaria || '-'}</td>
-        <td>${p.area || '-'}</td>
-        <td>${p.dependencia || '-'}</td>
-        <td>${items || '-'}</td>
-      </tr>
-    `;
+    return `<tr><td>${i+1}</td><td>${p.fecha} ${p.hora||''}</td><td>${p.nombre||'-'}</td><td>${p.secretaria||'-'}</td><td>${p.area||'-'}</td><td>${p.dependencia||'-'}</td><td>${items||'-'}</td></tr>`;
   }).join('');
 
-  const html = `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8" />
-      <title>Pedidos Entregados</title>
-      <style>
-        @page { size: A4 portrait; margin: 14mm 12mm 16mm 12mm; }
-        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
-        .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
-        .brand { display: flex; align-items: center; gap: 12px; }
-        .brand img { width: 64px; height: 64px; object-fit: contain; }
-        .brand-fallback { width: 64px; height: 64px; border-radius: 10px; background: #D4532B; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-        h1 { font-size: 18px; margin: 0; }
-        .sub { margin: 2px 0 0; font-size: 12px; color: #6B7280; }
-        p { margin: 0 0 10px; font-size: 12px; color: #6B7280; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #D1D5DB; padding: 6px 8px; text-align: left; vertical-align: top; }
-        th { background: #F3F4F6; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
-        .firma-wrap { margin-top: 38px; display: flex; justify-content: flex-end; }
-        .firma { width: 320px; font-size: 12px; text-align: center; }
-        .firma-line { border-top: 1px solid #111827; margin: 34px 0 8px; }
-        .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-        @media print {
-          body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          thead { display: table-header-group; }
-          tfoot { display: table-footer-group; }
-          tr { page-break-inside: avoid; break-inside: avoid; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="head">
-        <div class="brand">
-          <img src="${MUNICIPIO_LOGO_URL}" alt="Logo Municipalidad" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-          <div class="brand-fallback" style="display:none;">JM</div>
-          <div>
-            <h1>Municipalidad de Jesus Maria</h1>
-            <div class="sub">${pedidosParaImprimir.length === 1 ? 'Pedido entregado' : 'Listado de pedidos entregados'}</div>
-          </div>
-        </div>
-      </div>
-      <p>Generado: ${generado} - Total pedidos: ${pedidosParaImprimir.length}</p>
-      <table class="avoid-break">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fecha / Hora</th>
-            <th>Solicitante</th>
-            <th>Secretaria</th>
-            <th>Area</th>
-            <th>Dependencia</th>
-            <th>Articulos</th>
-          </tr>
-        </thead>
-        <tbody>${filas}</tbody>
-      </table>
-      <div class="firma-wrap avoid-break">
-        <div class="firma">
-          <div class="firma-line"></div>
-          <div><strong>Firma de quien recibe</strong></div>
-          <div>${recibeNombre}</div>
-          <div>Fecha: ${fechaFirma}</div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Pedidos Entregados</title>
+    <style>
+      @page{size:A4 portrait;margin:14mm 12mm 16mm 12mm;}
+      body{font-family:Arial,sans-serif;margin:24px;color:#111827;}
+      .head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
+      .brand{display:flex;align-items:center;gap:12px;}
+      .brand img{width:64px;height:64px;object-fit:contain;}
+      .brand-fallback{width:64px;height:64px;border-radius:10px;background:#D4532B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+      h1{font-size:18px;margin:0;}.sub{margin:2px 0 0;font-size:12px;color:#6B7280;}
+      p{margin:0 0 10px;font-size:12px;color:#6B7280;}
+      table{width:100%;border-collapse:collapse;font-size:11px;}
+      th,td{border:1px solid #D1D5DB;padding:6px 8px;text-align:left;vertical-align:top;}
+      th{background:#F3F4F6;font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+      .firma-wrap{margin-top:38px;display:flex;justify-content:flex-end;}
+      .firma{width:320px;font-size:12px;text-align:center;}
+      .firma-line{border-top:1px solid #111827;margin:34px 0 8px;}
+      @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}thead{display:table-header-group;}tr{page-break-inside:avoid;break-inside:avoid;}}
+    </style></head><body>
+    <div class="head"><div class="brand">
+      <img src="${MUNICIPIO_LOGO_URL}" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+      <div class="brand-fallback" style="display:none;">JM</div>
+      <div><h1>Municipalidad de Jesus Maria</h1><div class="sub">${pedidosParaImprimir.length===1?'Pedido entregado':'Listado de pedidos entregados'}</div></div>
+    </div></div>
+    <p>Generado: ${generado} - Total pedidos: ${pedidosParaImprimir.length}</p>
+    <table><thead><tr><th>#</th><th>Fecha / Hora</th><th>Solicitante</th><th>Secretaria</th><th>Area</th><th>Dependencia</th><th>Articulos</th></tr></thead>
+    <tbody>${filas}</tbody></table>
+    <div class="firma-wrap"><div class="firma"><div class="firma-line"></div><div><strong>Firma de quien recibe</strong></div><div>${recibeNombre}</div><div>Fecha: ${fechaFirma}</div></div></div>
+    </body></html>`;
 
   const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    showToast('El navegador bloqueo la ventana de impresion');
-    return;
-  }
-
+  if (!printWindow) { showToast('El navegador bloqueo la ventana de impresion'); return; }
   printWindow.document.open();
   printWindow.document.write(html);
   printWindow.document.close();
@@ -559,36 +479,36 @@ async function printEntregadosPDF() {
 //  RESUMEN UNIFICADO
 // ══════════════════════════════════════════════════
 function getResumenData() {
-  const depFil    = document.getElementById('res-dep').value;
-  const estadoFil = document.getElementById('res-estado').value;  // '' = ambos, o 'Pendiente'/'Solicitado'
-  const busFil    = document.getElementById('res-buscar').value.toLowerCase().trim();
-const busFilnombre    = document.getElementById('res-buscar').value.toLowerCase().trim();
-  // Filtrar pedidos por dependencia y estado
+  const depFil      = document.getElementById('res-dep').value;
+  const estadoFil   = document.getElementById('res-estado').value;   // '' = ambos
+  const busArticulo = document.getElementById('res-buscar').value.toLowerCase().trim();  // filtra articulos
+  const busNombre   = (document.getElementById('res-nombre') ? document.getElementById('res-nombre').value : '').toLowerCase().trim(); // filtra solicitante/area
+
+  // 1. Filtrar pedidos por dependencia, estado Y nombre/area del solicitante
   let pedidosFil = pedidos.filter(p => {
     if (depFil && p.dependencia !== depFil) return false;
     const estadoNorm = (p.estado==='Aprobado') ? 'Solicitado' : p.estado;
     if (estadoFil === '') {
-      // Pendiente O Solicitado
       if (estadoNorm !== 'Pendiente' && estadoNorm !== 'Solicitado') return false;
     } else {
       if (estadoNorm !== estadoFil) return false;
     }
-     if (busFilnombre) {
-      const nombreMatch = (p.nombre || '').toLowerCase().includes(busFil);
-      const areaMatch   = (p.dependencia || '').toLowerCase().includes(busFil);
-      if (!nombreMatch && !areaMatch) return false;
+    // Filtro por nombre del solicitante o area
+    if (busNombre) {
+      const nombre = (p.nombre || '').toLowerCase();
+      const area   = (p.area   || '').toLowerCase();
+      const dep    = (p.dependencia || '').toLowerCase();
+      if (!nombre.includes(busNombre) && !area.includes(busNombre) && !dep.includes(busNombre)) return false;
     }
     return true;
   });
 
-  // Agrupar articulos
-  const mapa = {}; // clave: articulo string
+  // 2. Agrupar articulos de los pedidos filtrados
+  const mapa = {};
   pedidosFil.forEach(p => {
     (p.items||[]).forEach(item => {
       const key = item.articulo;
-      if (!mapa[key]) {
-        mapa[key] = { articulo: key, cantidad: 0, pedidos: 0, solicitantes: [] };
-      }
+      if (!mapa[key]) mapa[key] = { articulo:key, cantidad:0, pedidos:0, solicitantes:[] };
       mapa[key].cantidad += parseInt(item.cantidad) || 1;
       mapa[key].pedidos  += 1;
       const label = p.nombre + (p.area ? ' (' + p.area + ')' : '');
@@ -596,10 +516,9 @@ const busFilnombre    = document.getElementById('res-buscar').value.toLowerCase(
     });
   });
 
+  // 3. Ordenar y filtrar por nombre de articulo
   let rows = Object.values(mapa).sort((a,b) => a.articulo.localeCompare(b.articulo));
-
-  // Filtro de busqueda por articulo
-  if (busFil) rows = rows.filter(r => r.articulo.toLowerCase().includes(busFil));
+  if (busArticulo) rows = rows.filter(r => r.articulo.toLowerCase().includes(busArticulo));
 
   return { rows, totalPedidos: pedidosFil.length };
 }
@@ -636,9 +555,11 @@ function renderResumen() {
 }
 
 function limpiarFiltrosResumen() {
-  document.getElementById('res-dep').selectedIndex = 0;
+  document.getElementById('res-dep').selectedIndex    = 0;
   document.getElementById('res-estado').selectedIndex = 0;
-  document.getElementById('res-buscar').value = '';
+  document.getElementById('res-buscar').value         = '';
+  const resNombre = document.getElementById('res-nombre');
+  if (resNombre) resNombre.value = '';
   renderResumen();
 }
 
@@ -716,8 +637,8 @@ async function renderUsuarios() {
 
 function depClass(dep) {
   if (!dep) return 'todas';
-  if (dep.toLowerCase().includes('edificio')) return 'edificio';
-  if (dep.toLowerCase().includes('obrador'))  return 'obrador';
+  if (dep.toLowerCase().includes('edificio'))   return 'edificio';
+  if (dep.toLowerCase().includes('obrador'))    return 'obrador';
   if (dep.toLowerCase().includes('almafuerte')) return 'almafuerte';
   return 'todas';
 }
@@ -749,7 +670,6 @@ async function eliminarUsuario(user) {
   showToast('Usuario eliminado');
 }
 
-
 function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
 
 function showPhotoModal(src) {
@@ -761,4 +681,3 @@ function showPhotoModal(src) {
 }
 
 init();
-
