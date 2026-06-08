@@ -611,11 +611,6 @@ function exportResumenExcel() {
       const partes = item.articulo.split(' - ');
       data.push({
         'N°':            n++,
-        'Fecha':         p.fecha,
-        'Hora':          p.hora,
-        'Estado':        estadoNorm,
-        'Dependencia':   p.dependencia   || '',
-        'Secretaria':    p.secretaria    || '',
         'Area':          p.area          || '',
         'Solicitante':   p.nombre        || '',
         'Codigo':        partes[0]       || '',
@@ -623,7 +618,7 @@ function exportResumenExcel() {
         'Especificacion':item.especificacion || '',
         'Empaque':       item.empaque    || '',
         'Cantidad':      item.cantidad,
-        'Observaciones': p.observaciones || '',
+       
       });
     });
   });
