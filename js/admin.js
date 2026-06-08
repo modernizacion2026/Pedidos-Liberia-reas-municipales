@@ -530,7 +530,8 @@ function getResumenData() {
   let rows = Object.values(mapa).sort((a,b) => a.articulo.localeCompare(b.articulo));
   if (busArticulo) rows = rows.filter(r => r.articulo.toLowerCase().includes(busArticulo));
 
-  return { rows, totalPedidos: pedidosFil.length };
+  //return { rows, totalPedidos: pedidosFil.length };
+  return { rows, totalPedidos: pedidosFil.length, pedidosFil };
 }
 
 function renderResumen() {
@@ -575,7 +576,7 @@ function limpiarFiltrosResumen() {
   renderResumen();
 }
 
-function exportResumenExcel() {
+/*function exportResumenExcel() {
   const { rows, totalPedidos } = getResumenData();
   if (!rows.length) { showToast('No hay articulos para exportar'); return; }
   const data = rows.map((r,i) => {
@@ -596,7 +597,46 @@ function exportResumenExcel() {
   const fecha = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(' ','_');
   XLSX.writeFile(wb, `Pedido_Unificado_${fecha}.xlsx`);
   showToast('Excel del pedido unificado descargado');
+}*/
+function exportResumenExcel() {
+  const { rows, totalPedidos, pedidosFil } = getResumenData();
+  if (!rows.length) { showToast('No hay articulos para exportar'); return; }
+
+  // Una fila por cada ítem de cada pedido filtrado (detalle completo)
+  const data = [];
+  let n = 1;
+  pedidosFil.forEach(p => {
+    const estadoNorm = (p.estado === 'Aprobado') ? 'Solicitado' : p.estado;
+    (p.items || []).forEach(item => {
+      const partes = item.articulo.split(' - ');
+      data.push({
+        'N°':            n++,
+        'Fecha':         p.fecha,
+        'Hora':          p.hora,
+        'Estado':        estadoNorm,
+        'Dependencia':   p.dependencia   || '',
+        'Secretaria':    p.secretaria    || '',
+        'Area':          p.area          || '',
+        'Solicitante':   p.nombre        || '',
+        'Codigo':        partes[0]       || '',
+        'Articulo':      partes.slice(1).join(' - ') || item.articulo,
+        'Especificacion':item.especificacion || '',
+        'Empaque':       item.empaque    || '',
+        'Cantidad':      item.cantidad,
+        'Observaciones': p.observaciones || '',
+      });
+    });
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [5,10,8,12,22,32,24,22,14,36,22,12,10,28].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pedido Unificado');
+  const fecha = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(' ','_');
+  XLSX.writeFile(wb, `Pedido_Unificado_${fecha}.xlsx`);
+  showToast('Excel detallado descargado (' + data.length + ' items)');
 }
+
 
 // ══════════════════════════════════════════════════
 //  CATALOGO
