@@ -602,7 +602,7 @@ function remitoDepDialog() {
   // Agrupar articulos
   const mapa = {};
   data.forEach(p=>{
-    (p.items||[]).forEach(item=>{
+   (p.items||[]).forEach(item=>{
       const key=item.articulo;
       if(!mapa[key]) mapa[key]={articulo:key,cantidad:0,solicitantes:[],estadoRemito:'entregado'};
       mapa[key].cantidad+=parseInt(item.cantidad)||1;
@@ -611,6 +611,8 @@ function remitoDepDialog() {
     });
   });
   let artState=Object.values(mapa).sort((a,b)=>a.articulo.localeCompare(b.articulo));
+  // por defecto, se entrega la cantidad total (el usuario puede ajustar)
+  artState=artState.map(r=>({...r,cantEntregada:r.cantidad}));
   if(!artState.length){showToast('No hay articulos en los pedidos filtrados');return;}
 
   // Dependencia actual del filtro
@@ -638,7 +640,8 @@ function remitoDepDialog() {
             <th style="padding:7px 10px;text-align:left;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;text-transform:uppercase">Articulo</th>
             <th style="padding:7px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:55px">Cant.</th>
             <th style="padding:7px 10px;text-align:left;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280">Solicitado por</th>
-            <th style="padding:7px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:120px">Estado</th>
+           <th style="padding:7px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:85px">Entregado</th>
+            <th style="padding:7px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:85px">Pendiente</th>
           </tr></thead>
           <tbody id="rd-art-body"></tbody>
         </table>
@@ -660,35 +663,42 @@ function remitoDepDialog() {
     </div>`;
   document.body.appendChild(overlay);
 
-  function renderArtDialog() {
+ function renderArtDialog() {
     document.getElementById('rd-art-body').innerHTML=artState.map((r,i)=>{
       const partes=(r.articulo||'').split(' - ');
       const nombre=partes.slice(1).join(' - ')||r.articulo;
       const codigo=partes[0]||'';
-      const esE=r.estadoRemito!=='pendiente';
+      const cantEnt=r.cantEntregada!=null?r.cantEntregada:r.cantidad;
+      const cantPend=r.cantidad-cantEnt;
       return `<tr style="border-bottom:1px solid #F3F4F6">
         <td style="padding:7px 10px"><div style="font-weight:600">${nombre}</div><div style="font-size:10px;color:#9CA3AF">${codigo}</div></td>
         <td style="padding:7px 10px;text-align:center;font-weight:700">${r.cantidad}</td>
         <td style="padding:7px 10px;font-size:11px;color:#6B7280">${(r.solicitantes||[]).join(', ')}</td>
         <td style="padding:7px 10px;text-align:center">
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-weight:600;color:${esE?'#059669':'#D97706'}">
-            <input type="checkbox" data-idx="${i}" class="rd-art-chk" ${esE?'checked':''} style="width:15px;height:15px;cursor:pointer"/>
-            ${esE?'Entregado':'Pendiente'}
-          </label>
+          <input type="number" data-idx="${i}" class="rd-art-cant" min="0" max="${r.cantidad}" value="${cantEnt}"
+            style="width:58px;padding:4px 6px;border:1.5px solid #E5E7EB;border-radius:6px;text-align:center;font-weight:700;color:#059669"/>
         </td>
+        <td style="padding:7px 10px;text-align:center;font-weight:700;color:${cantPend>0?'#D97706':'#9CA3AF'}">${cantPend}</td>
       </tr>`;
     }).join('');
-    overlay.querySelectorAll('.rd-art-chk').forEach(chk=>{
-      chk.addEventListener('change',()=>{
-        artState[parseInt(chk.dataset.idx)].estadoRemito=chk.checked?'entregado':'pendiente';
+    // al cambiar la cantidad entregada, se recalcula pendiente y estadoRemito
+    overlay.querySelectorAll('.rd-art-cant').forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const idx=parseInt(inp.dataset.idx);
+        const max=artState[idx].cantidad;
+        let val=parseInt(inp.value);
+        if(isNaN(val)||val<0) val=0;
+        if(val>max) val=max;
+        artState[idx].cantEntregada=val;
+        artState[idx].estadoRemito = val>=max ? 'entregado' : (val<=0 ? 'pendiente' : 'parcial');
         renderArtDialog();
       });
     });
   }
   renderArtDialog();
 
-  overlay.querySelector('#rd-all-e').onclick=()=>{artState=artState.map(r=>({...r,estadoRemito:'entregado'}));renderArtDialog();};
-  overlay.querySelector('#rd-all-p').onclick=()=>{artState=artState.map(r=>({...r,estadoRemito:'pendiente'}));renderArtDialog();};
+ overlay.querySelector('#rd-all-e').onclick=()=>{artState=artState.map(r=>({...r,estadoRemito:'entregado',cantEntregada:r.cantidad}));renderArtDialog();};
+  overlay.querySelector('#rd-all-p').onclick=()=>{artState=artState.map(r=>({...r,estadoRemito:'pendiente',cantEntregada:0}));renderArtDialog();};
   const cerrar=()=>overlay.remove();
   overlay.querySelector('#rd-close').onclick=cerrar;
   overlay.querySelector('#rd-cancel').onclick=cerrar;
@@ -705,21 +715,23 @@ function remitoDepDialog() {
 function _pdfDependencia(artState,dependencia,entrega,recibe,totalPedidos) {
   const generado=new Date().toLocaleString('es-AR');
   const fechaHoy=new Date().toLocaleDateString('es-AR');
-  const entregados=artState.filter(r=>r.estadoRemito!=='pendiente');
-  const pendientes=artState.filter(r=>r.estadoRemito==='pendiente');
+  const entregados=artState.filter(r=>(r.cantEntregada!=null?r.cantEntregada:r.cantidad)>0);
+  const pendientes=artState.filter(r=>{const ce=r.cantEntregada!=null?r.cantEntregada:r.cantidad;return (r.cantidad-ce)>0;});
   const filas=artState.map((r,i)=>{
     const partes=(r.articulo||'').split(' - ');
     const nombre=partes.slice(1).join(' - ')||r.articulo;
     const codigo=partes[0]||'';
-    const esE=r.estadoRemito!=='pendiente';
+    const cantEnt=r.cantEntregada!=null?r.cantEntregada:r.cantidad;
+    const cantPend=r.cantidad-cantEnt;
     return `<tr><td style="text-align:center;color:#6B7280;font-size:11px">${i+1}</td>
       <td class="art-codigo">${codigo}</td>
       <td><span class="art-nombre">${nombre}</span></td>
       <td style="text-align:center;font-weight:700">${r.cantidad}</td>
       <td style="font-size:10px;color:#6B7280">${(r.solicitantes||[]).join(', ')}</td>
-      <td style="text-align:center"><span class="${esE?'badge-e':'badge-p'}">${esE?'Entregado':'Pendiente'}</span></td></tr>`;
+      <td style="text-align:center;font-weight:700;color:#059669">${cantEnt}</td>
+      <td style="text-align:center;font-weight:700;color:${cantPend>0?'#D97706':'#9CA3AF'}">${cantPend}</td></tr>`;
   }).join('');
-  const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos pendientes (${pendientes.length}):</strong>${pendientes.map(r=>{const n=(r.articulo||'').split(' - ').slice(1).join(' - ')||r.articulo;return `<br>&bull; ${n} (cant: ${r.cantidad}) &mdash; ${(r.solicitantes||[]).join(', ')}`;}).join('')}</div>`:'';
+  const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos con cantidad pendiente (${pendientes.length}):</strong>${pendientes.map(r=>{const n=(r.articulo||'').split(' - ').slice(1).join(' - ')||r.articulo;const ce=r.cantEntregada!=null?r.cantEntregada:r.cantidad;return `<br>&bull; ${n} (pendiente: ${r.cantidad-ce} de ${r.cantidad}) &mdash; ${(r.solicitantes||[]).join(', ')}`;}).join('')}</div>`:'';
   const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Remito Dependencia - ${dependencia}</title><style>${REMITO_CSS}</style></head><body>
     <div class="head"><div class="brand">${_logoHtml()}<div><h1>Municipalidad de Jesus Maria</h1><p class="sub">Remito de entrega de articulos de libreria</p></div></div><span class="remito-tipo">Remito por dependencia</span></div>
     <div class="meta-grid">
@@ -733,7 +745,7 @@ function _pdfDependencia(artState,dependencia,entrega,recibe,totalPedidos) {
       <div class="tot-item">Entregados: <strong style="color:#059669">${entregados.length}</strong></div>
       <div class="tot-item">Pendientes: <strong style="color:#D97706">${pendientes.length}</strong></div>
     </div>
-    <table><thead><tr><th style="width:4%">#</th><th style="width:12%">Codigo</th><th style="width:30%">Articulo</th><th style="width:8%;text-align:center">Cant.</th><th style="width:28%">Solicitado por</th><th style="width:14%;text-align:center">Estado</th></tr></thead><tbody>${filas}</tbody></table>
+    <table><thead><tr><th style="width:4%">#</th><th style="width:11%">Codigo</th><th style="width:26%">Articulo</th><th style="width:7%;text-align:center">Cant.</th><th style="width:24%">Solicitado por</th><th style="width:11%;text-align:center">Entregado</th><th style="width:11%;text-align:center">Pendiente</th></tr></thead><tbody>${filas}</tbody></table>
     ${notaPend}
     <div class="firmas">
       <div class="firma-bloque"><div class="firma-linea"></div><div class="firma-nombre">${entrega}</div><div class="firma-cargo">Firma de quien entrega</div><div style="color:#6B7280;font-size:10px;margin-top:2px">Libreria Municipal</div></div>
