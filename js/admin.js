@@ -434,7 +434,9 @@ function _abrirVentana(html) {
 function remitoEquipo(pedidoId) {
   const p = pedidos.find(x=>String(x.id)===String(pedidoId));
   if (!p) { showToast('Pedido no encontrado'); return; }
-  let itemsState = (p.items||[]).map(it=>({...it, estadoItem: it.estadoItem||'entregado'}));
+  // cantEntregada: cuanto se entrega de ese articulo (el resto queda pendiente automaticamente)
+  let itemsState = (p.items||[]).map(it=>({...it, estadoItem: it.estadoItem||'entregado',
+    cantEntregada: it.cantEntregada!=null ? it.cantEntregada : (it.estadoItem==='pendiente' ? 0 : it.cantidad)}));
 
   const overlay = document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
@@ -457,7 +459,8 @@ function remitoEquipo(pedidoId) {
           <thead><tr style="background:#F9FAFB">
             <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;text-transform:uppercase">Articulo</th>
             <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:60px">Cant.</th>
-            <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:130px">Estado</th>
+           <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:90px">Entregado</th>
+            <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #E5E7EB;font-size:11px;color:#6B7280;width:90px">Pendiente</th>
           </tr></thead>
           <tbody id="re-items-body"></tbody>
         </table>
@@ -485,30 +488,36 @@ function remitoEquipo(pedidoId) {
       const partes=(it.articulo||'').split(' - ');
       const nombre=partes.slice(1).join(' - ')||it.articulo;
       const codigo=partes[0]||'';
-      const esE=it.estadoItem!=='pendiente';
+      const cantEnt=it.cantEntregada!=null?it.cantEntregada:it.cantidad;
+      const cantPend=it.cantidad-cantEnt;
       return `<tr style="border-bottom:1px solid #F3F4F6">
         <td style="padding:8px 10px"><div style="font-weight:600;font-size:13px">${nombre}</div><div style="font-size:11px;color:#9CA3AF">${codigo}</div></td>
         <td style="padding:8px 10px;text-align:center;font-weight:700">${it.cantidad}</td>
         <td style="padding:8px 10px;text-align:center">
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;color:${esE?'#059669':'#D97706'}">
-            <input type="checkbox" data-idx="${i}" class="re-item-chk" ${esE?'checked':''} style="width:16px;height:16px;cursor:pointer"/>
-            ${esE?'Entregado':'Pendiente'}
-          </label>
+          <input type="number" data-idx="${i}" class="re-item-cant" min="0" max="${it.cantidad}" value="${cantEnt}"
+            style="width:60px;padding:5px 6px;border:1.5px solid #E5E7EB;border-radius:6px;text-align:center;font-weight:700;color:#059669"/>
         </td>
+        <td style="padding:8px 10px;text-align:center;font-weight:700;color:${cantPend>0?'#D97706':'#9CA3AF'}">${cantPend}</td>
       </tr>`;
     }).join('');
-    overlay.querySelectorAll('.re-item-chk').forEach(chk=>{
-      chk.addEventListener('change',()=>{
-        itemsState[parseInt(chk.dataset.idx)].estadoItem=chk.checked?'entregado':'pendiente';
+    // al cambiar la cantidad entregada, se recalcula pendiente y el estadoItem (entregado/parcial/pendiente)
+    overlay.querySelectorAll('.re-item-cant').forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const idx=parseInt(inp.dataset.idx);
+        const max=itemsState[idx].cantidad;
+        let val=parseInt(inp.value);
+        if(isNaN(val)||val<0) val=0;
+        if(val>max) val=max;
+        itemsState[idx].cantEntregada=val;
+        itemsState[idx].estadoItem = val>=max ? 'entregado' : (val<=0 ? 'pendiente' : 'parcial');
         renderItemsDialog();
       });
     });
   }
   renderItemsDialog();
 
-  overlay.querySelector('#re-all-e').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'entregado'}));renderItemsDialog();};
-  overlay.querySelector('#re-all-p').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'pendiente'}));renderItemsDialog();};
-  const cerrar=()=>overlay.remove();
+  overlay.querySelector('#re-all-e').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'entregado',cantEntregada:it.cantidad}));renderItemsDialog();};
+  overlay.querySelector('#re-all-p').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'pendiente',cantEntregada:0}));renderItemsDialog();};
   overlay.querySelector('#re-close').onclick=cerrar;
   overlay.querySelector('#re-cancel').onclick=cerrar;
 
@@ -538,22 +547,23 @@ function _pdfEquipo(p,items,recibe,entrega) {
   const generado=new Date().toLocaleString('es-AR');
   const fechaHoy=new Date().toLocaleDateString('es-AR');
   const estadoNorm=(p.estado==='Aprobado')?'Solicitado':p.estado;
-  const entregados=items.filter(it=>it.estadoItem!=='pendiente');
-  const pendientes=items.filter(it=>it.estadoItem==='pendiente');
+ const entregados=items.filter(it=>(it.cantEntregada!=null?it.cantEntregada:it.cantidad)>0);
+  const pendientes=items.filter(it=>{const ce=it.cantEntregada!=null?it.cantEntregada:it.cantidad;return (it.cantidad-ce)>0;});
   const filas=items.map((it,i)=>{
     const partes=(it.articulo||'').split(' - ');
     const nombre=partes.slice(1).join(' - ')||it.articulo;
     const codigo=partes[0]||'';
-    const esE=it.estadoItem!=='pendiente';
+    const cantEnt=it.cantEntregada!=null?it.cantEntregada:it.cantidad;
+    const cantPend=it.cantidad-cantEnt;
     return `<tr><td style="text-align:center;color:#6B7280;font-size:11px">${i+1}</td>
       <td class="art-codigo">${codigo}</td>
       <td><span class="art-nombre">${nombre}</span>${it.especificacion?`<br><span style="font-size:10px;color:#6B7280">${it.especificacion}</span>`:''}</td>
       <td style="text-align:center;font-weight:700">${it.cantidad}</td>
       <td style="text-align:center">${it.empaque||'-'}</td>
-      <td style="text-align:center"><span class="${esE?'badge-e':'badge-p'}">${esE?'Entregado':'Pendiente'}</span></td></tr>`;
+      <td style="text-align:center;font-weight:700;color:#059669">${cantEnt}</td>
+      <td style="text-align:center;font-weight:700;color:${cantPend>0?'#D97706':'#9CA3AF'}">${cantPend}</td></tr>`;
   }).join('');
-  const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos pendientes (${pendientes.length}):</strong>${pendientes.map(it=>{const n=(it.articulo||'').split(' - ').slice(1).join(' - ')||it.articulo;return `<br>&bull; ${n} (cant: ${it.cantidad})`;}).join('')}</div>`:'';
-  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Remito - ${p.nombre}</title><style>${REMITO_CSS}</style></head><body>
+  const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos con cantidad pendiente (${pendientes.length}):</strong>${pendientes.map(it=>{const n=(it.articulo||'').split(' - ').slice(1).join(' - ')||it.articulo;const ce=it.cantEntregada!=null?it.cantEntregada:it.cantidad;return `<br>&bull; ${n} (pendiente: ${it.cantidad-ce} de ${it.cantidad})`;}).join('')}</div>`:'';
     <div class="head"><div class="brand">${_logoHtml()}<div><h1>Municipalidad de Jesus Maria</h1><p class="sub">Remito de entrega de articulos de libreria</p></div></div><span class="remito-tipo">Remito por equipo</span></div>
     <div class="meta-grid">
       <div class="meta-item"><span class="lbl">Solicitante</span><span class="val">${p.nombre}</span></div>
@@ -568,7 +578,7 @@ function _pdfEquipo(p,items,recibe,entrega) {
       <div class="tot-item">Entregados: <strong style="color:#059669">${entregados.length}</strong></div>
       <div class="tot-item">Pendientes: <strong style="color:#D97706">${pendientes.length}</strong></div>
     </div>
-    <table><thead><tr><th style="width:4%">#</th><th style="width:12%">Codigo</th><th style="width:38%">Articulo</th><th style="width:8%;text-align:center">Cant.</th><th style="width:10%">Empaque</th><th style="width:14%;text-align:center">Estado</th></tr></thead><tbody>${filas}</tbody></table>
+   <table><thead><tr><th style="width:4%">#</th><th style="width:12%">Codigo</th><th style="width:32%">Articulo</th><th style="width:7%;text-align:center">Cant.</th><th style="width:9%">Empaque</th><th style="width:11%;text-align:center">Entregado</th><th style="width:11%;text-align:center">Pendiente</th></tr></thead><tbody>${filas}</tbody></table>
     ${notaPend}
     <div class="firmas">
       <div class="firma-bloque"><div class="firma-linea"></div><div class="firma-nombre">${entrega}</div><div class="firma-cargo">Firma de quien entrega</div><div style="color:#6B7280;font-size:10px;margin-top:2px">Libreria Municipal</div></div>
