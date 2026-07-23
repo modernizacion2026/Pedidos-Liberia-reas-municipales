@@ -516,11 +516,11 @@ function remitoEquipo(pedidoId) {
   }
   renderItemsDialog();
 
-  overlay.querySelector('#re-all-e').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'entregado',cantEntregada:it.cantidad}));renderItemsDialog();};
+ overlay.querySelector('#re-all-e').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'entregado',cantEntregada:it.cantidad}));renderItemsDialog();};
   overlay.querySelector('#re-all-p').onclick=()=>{itemsState=itemsState.map(it=>({...it,estadoItem:'pendiente',cantEntregada:0}));renderItemsDialog();};
+  const cerrar=()=>overlay.remove();
   overlay.querySelector('#re-close').onclick=cerrar;
   overlay.querySelector('#re-cancel').onclick=cerrar;
-
   overlay.querySelector('#re-guardar').onclick=async()=>{
     try {
       const todosE=itemsState.every(it=>it.estadoItem==='entregado');
@@ -563,7 +563,8 @@ function _pdfEquipo(p,items,recibe,entrega) {
       <td style="text-align:center;font-weight:700;color:#059669">${cantEnt}</td>
       <td style="text-align:center;font-weight:700;color:${cantPend>0?'#D97706':'#9CA3AF'}">${cantPend}</td></tr>`;
   }).join('');
-  const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos con cantidad pendiente (${pendientes.length}):</strong>${pendientes.map(it=>{const n=(it.articulo||'').split(' - ').slice(1).join(' - ')||it.articulo;const ce=it.cantEntregada!=null?it.cantEntregada:it.cantidad;return `<br>&bull; ${n} (pendiente: ${it.cantidad-ce} de ${it.cantidad})`;}).join('')}</div>`:'';
+ const notaPend=pendientes.length>0?`<div class="pendientes-nota"><strong>&#9888; Articulos con cantidad pendiente (${pendientes.length}):</strong>${pendientes.map(it=>{const n=(it.articulo||'').split(' - ').slice(1).join(' - ')||it.articulo;const ce=it.cantEntregada!=null?it.cantEntregada:it.cantidad;return `<br>&bull; ${n} (pendiente: ${it.cantidad-ce} de ${it.cantidad})`;}).join('')}</div>`:'';
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Remito - ${p.nombre}</title><style>${REMITO_CSS}</style></head><body>
     <div class="head"><div class="brand">${_logoHtml()}<div><h1>Municipalidad de Jesus Maria</h1><p class="sub">Remito de entrega de articulos de libreria</p></div></div><span class="remito-tipo">Remito por equipo</span></div>
     <div class="meta-grid">
       <div class="meta-item"><span class="lbl">Solicitante</span><span class="val">${p.nombre}</span></div>
