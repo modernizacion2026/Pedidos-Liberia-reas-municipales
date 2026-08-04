@@ -1,7 +1,22 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiQGeLGs8zdt7wj16E7m6LtKqf5S_pNrjds7FF7HkjdSuAB6dZZJF3uJkSgSU_jp02Rw/exec';
 
-const ESTADO_DISPLAY = { 'Pendiente':'Pendiente','Aprobado':'Solicitado','Solicitado':'Solicitado','Entregado':'Entregado','Rechazado':'Rechazado' };
-const STATUS_COLORS  = { 'Pendiente':'pendiente','Aprobado':'solicitado','Solicitado':'solicitado','Entregado':'entregado','Rechazado':'rechazado' };
+const ESTADO_DISPLAY = { 
+  'Pendiente': 'Pendiente', 
+  'Preparado': 'Preparado', 
+  'Aprobado': 'Solicitado', 
+  'Solicitado': 'Solicitado', 
+  'Entregado': 'Entregado', 
+  'Rechazado': 'Rechazado' 
+};
+
+const STATUS_COLORS  = { 
+  'Pendiente': 'pendiente', 
+  'Preparado': 'preparado', // <- Asegúrate de tener este color configurado en tu CSS
+  'Aprobado': 'solicitado', 
+  'Solicitado': 'solicitado', 
+  'Entregado': 'entregado', 
+  'Rechazado': 'rechazado' 
+};
 
 let pedidos   = [];
 let articulos = [];
@@ -82,13 +97,17 @@ function renderStats() {
   let data = pedidos;
   if (currentUser && currentUser.rol !== 'admin' && currentUser.dependencia)
     data = data.filter(p => p.dependencia === currentUser.dependencia);
+  
   const total = data.length;
-  const pend  = data.filter(p=>p.estado==='Pendiente').length;
-  const soli  = data.filter(p=>p.estado==='Solicitado'||p.estado==='Aprobado').length;
-  const entr  = data.filter(p=>p.estado==='Entregado').length;
+  const pend  = data.filter(p => p.estado === 'Pendiente').length;
+  const prep  = data.filter(p => p.estado === 'Preparado').length; // <- Conteo de preparados en pañol
+  const soli  = data.filter(p => p.estado === 'Solicitado' || p.estado === 'Aprobado').length;
+  const entr  = data.filter(p => p.estado === 'Entregado').length;
+
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card stat-total"><div class="stat-label">Total pedidos</div><div class="stat-val">${total}</div><div class="stat-sub">registrados</div></div>
     <div class="stat-card stat-pend"><div class="stat-label">Pendientes</div><div class="stat-val">${pend}</div><div class="stat-sub">por gestionar</div></div>
+    <div class="stat-card stat-prep"><div class="stat-label">Preparados</div><div class="stat-val">${prep}</div><div class="stat-sub">listos en pañol</div></div>
     <div class="stat-card stat-soli"><div class="stat-label">Solicitados</div><div class="stat-val">${soli}</div><div class="stat-sub">en proceso</div></div>
     <div class="stat-card stat-entr"><div class="stat-label">Entregados</div><div class="stat-val">${entr}</div><div class="stat-sub">completados</div></div>`;
 }
@@ -167,6 +186,7 @@ function renderTabla() {
         <select class="status-select status-${STATUS_COLORS[p.estado]||'pendiente'}" onchange="changeStatus('${p.id}',this.value,this)" ${isEntregado?'disabled title="Bloqueado: entregado"':''}>
           <option ${estadoNorm==='Pendiente'?'selected':''}>Pendiente</option>
           <option ${estadoNorm==='Solicitado'?'selected':''}>Solicitado</option>
+          <option ${estadoNorm==='Preparado'?'selected':''}>Preparado</option>
           <option ${estadoNorm==='Entregado'?'selected':''}>Entregado</option>
           <option ${estadoNorm==='Rechazado'?'selected':''}>Rechazado</option>
         </select>
