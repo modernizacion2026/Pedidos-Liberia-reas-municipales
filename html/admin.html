@@ -88,6 +88,7 @@
           <select id="fil-estado" onchange="renderTabla()">
             <option value="">Todos</option>
             <option>Pendiente</option>
+            <option ${estadoNorm==='Preparado'?'selected':''}>Preparado</option>
             <option>Solicitado</option>
             <option>Entregado</option>
             <option>Rechazado</option>
@@ -146,6 +147,7 @@
           <label>Estado de pedidos a incluir</label>
           <select id="res-estado" onchange="renderResumen()">
             <option value="Pendiente">Solo Pendientes</option>
+            <option>Preparado</option>
             <option value="Solicitado">Solo Solicitados</option>
             <option value="">Pendientes + Solicitados</option>
           </select>
