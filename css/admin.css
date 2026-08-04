@@ -72,6 +72,7 @@
   .status-badge{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;}
   .status-pendiente{background:#FEF3C7;color:#D97706;}
   .status-solicitado{background:var(--teal-bg);color:var(--teal);}
+  .status-preparado{background:var(--amber-bg);color:var(--amber);}
   .status-entregado{background:var(--verde-bg);color:var(--verde);}
   .status-rechazado{background:var(--rojo-bg);color:var(--rojo);}
   .status-select{font-size:12px;padding:5px 10px;border:1.5px solid var(--gris-borde);border-radius:8px;cursor:pointer;font-weight:600;}
