@@ -1,5 +1,4 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdHzCUlmCcDvqOrys6JTMb6hU7rpHdOZ6agtk5ESuKd2dJuz1GB5P0sNEjlPQ1V08Hlg/exec';
-
 const ESTADO_DISPLAY = { 
   'Pendiente': 'Pendiente', 
   'Preparado': 'Preparado', 
