@@ -242,6 +242,20 @@ function verDetalle(id) {
   const p = pedidos.find(x=>String(x.id)===String(id));
   if (!p) return;
   const estadoNorm = (p.estado==='Aprobado') ? 'Solicitado' : p.estado;
+  
+  let itemsHtml = '';
+  if (p.items && p.items.length > 0) {
+    p.items.forEach(it => {
+      const esE = it.estadoItem === 'entregado';
+      const esP = it.estadoItem === 'pendiente';
+      const badge = esE ? '<span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Entregado</span>'
+                  : esP ? '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Pendiente</span>'
+                  : '-';
+      const imgHtml = it.foto ? '<img src="' + it.foto + '" class="photo-thumb" />' : '-';
+      itemsHtml += '<tr><td>' + (it.articulo||'') + '</td><td>' + (it.especificacion||'-') + '</td><td>' + (it.empaque||'-') + '</td><td style="text-align:center"><strong>' + (it.cantidad||1) + '</strong></td><td>' + badge + '</td><td>' + imgHtml + '</td></tr>';
+    });
+  }
+
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-row"><span class="lbl">Fecha:</span> ${p.fecha} ${p.hora}</div>
     <div class="modal-row"><span class="lbl">Solicitante:</span> ${p.nombre}</div>
@@ -253,17 +267,11 @@ function verDetalle(id) {
     ${p.observaciones?`<div class="modal-row"><span class="lbl">Observaciones:</span> <em>${p.observaciones}</em></div>`:''}
     <div class="items-detail"><table>
       <thead><tr><th>Articulo</th><th>Espec.</th><th>Empaque</th><th>Cant.</th><th>Estado item</th><th>Imagen</th></tr></thead>
-      <tbody>${(p.items||[]).map(it=>{
-        const esE = it.estadoItem === 'entregado';
-        const esP = it.estadoItem === 'pendiente';
-        const badge = esE ? '<span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Entregado</span>'
-                    : esP ? '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Pendiente</span>'
-                    : '-';
-        return `<tr><td>${it.articulo}</td><td>${it.especificacion\vert{}\vert{}'-'}</td><td>${it.empaque||'-'}</td><td style="text-align:center"><strong>${it.cantidad}</strong></td><td>${badge}</td><td>${it.foto?`<img src="${it.foto}" class="photo-thumb" onclick="showPhotoModal('${it.foto.replace(/'/g,"\\'")}')"/>`:'-'}</td></tr>`;
-      }).join('')}</tbody>
+      <tbody>${itemsHtml}</tbody>
     </table></div>`;
   document.getElementById('modal-overlay').classList.add('open');
 }
+
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
 
 function exportExcel() {
