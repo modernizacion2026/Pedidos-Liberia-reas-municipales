@@ -359,53 +359,30 @@ function renderResumen() {
   container.innerHTML = html;
 }
 
-function renderCatalogo() {
-  const container = document.getElementById('atab-catalogo');
-  if (!container) return;
-
-  if (!articulos.length) {
-    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No hay artículos cargados en el catálogo.</p>';
-    return;
-  }
-
-  let html = `
-    <div style="padding: 15px 0;">
-      <h3 style="margin-bottom:12px;">Catálogo de Artículos</h3>
-      <table class="tabla-admin" style="width:100%; border-collapse:collapse;">
-        <thead>
-          <tr style="background:#f3f4f6; text-align:left;">
-            <th style="padding:10px; border-bottom:1px solid #ddd;">#</th>
-            <th style="padding:10px; border-bottom:1px solid #ddd;">Artículo / Descripción</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-  articulos.forEach((art, index) => {
-    const nombreArticulo = typeof art === 'object' ? (art.articulo || art.nombre || JSON.stringify(art)) : art;
-    html += `
-      <tr>
-        <td style="padding:8px 10px; border-bottom:1px solid #eee; color:var(--texto-sec);">${index + 1}</td>
-        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${nombreArticulo}</td>
-      </tr>`;
-  });
-
-  html += `</tbody></table></div>`;
-  container.innerHTML = html;
-}
-
 function renderUsuarios() {
   const container = document.getElementById('atab-usuarios');
   if (!container) return;
 
-  const userKeys = Object.keys(usuarios);
-  if (!userKeys.length) {
-    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No se encontraron usuarios registrados.</p>';
+  // Convertimos a array tanto si 'usuarios' viene como Array o como Objeto
+  let listaUsuarios = [];
+  
+  if (Array.isArray(usuarios)) {
+    listaUsuarios = usuarios;
+  } else if (typeof usuarios === 'object' && usuarios !== null) {
+    listaUsuarios = Object.keys(usuarios).map(key => {
+      const u = usuarios[key];
+      return typeof u === 'object' ? { user: key, ...u } : { user: key, nombre: u };
+    });
+  }
+
+  if (!listaUsuarios.length) {
+    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No se encontraron usuarios registrados o la sesión no devolvió datos.</p>';
     return;
   }
 
   let html = `
     <div style="padding: 15px 0;">
-      <div style="display:flex; justify-between; align-items:center; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3>Usuarios del Sistema</h3>
       </div>
       <table class="tabla-admin" style="width:100%; border-collapse:collapse;">
@@ -414,19 +391,18 @@ function renderUsuarios() {
             <th style="padding:10px; border-bottom:1px solid #ddd;">Usuario</th>
             <th style="padding:10px; border-bottom:1px solid #ddd;">Nombre</th>
             <th style="padding:10px; border-bottom:1px solid #ddd;">Rol</th>
-            <th style="padding:10px; border-bottom:1px solid #ddd;">Dependencia</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Dependencia / Área</th>
           </tr>
         </thead>
         <tbody>`;
 
-  userKeys.forEach(uKey => {
-    const u = usuarios[uKey];
+  listaUsuarios.forEach(u => {
     html += `
       <tr>
-        <td style="padding:8px 10px; border-bottom:1px solid #eee;"><strong>${uKey}</strong></td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;"><strong>${u.user || u.usuario || '-'}</strong></td>
         <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.nombre || '-'}</td>
         <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.rol || '-'}</td>
-        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.dependencia || '-'}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.dependencia || u.area || '-'}</td>
       </tr>`;
   });
 
