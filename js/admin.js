@@ -311,3 +311,125 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3000);
 }
+// ==========================================
+// FUNCIONES DE RENDERIZADO DE PESTAÑAS (ADMIN)
+// ==========================================
+
+function renderResumen() {
+  const container = document.getElementById('atab-resumen');
+  if (!container) return;
+  
+  // Agrupa la cantidad total solicitada por artículo de todos los pedidos
+  const resumen = {};
+  pedidos.forEach(p => {
+    (p.items || []).forEach(it => {
+      const art = it.articulo || 'Sin especificar';
+      const cant = parseInt(it.cantidad || 1, 10);
+      resumen[art] = (resumen[art] || 0) + cant;
+    });
+  });
+
+  const keys = Object.keys(resumen);
+  if (!keys.length) {
+    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No hay datos para generar el pedido unificado.</p>';
+    return;
+  }
+
+  let html = `
+    <div style="padding: 15px 0;">
+      <h3 style="margin-bottom:12px;">Pedido Unificado de Insumos</h3>
+      <table class="tabla-admin" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f3f4f6; text-align:left;">
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Artículo</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd; text-align:center;">Cantidad Total</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  keys.forEach(art => {
+    html += `
+      <tr>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${art}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; text-align:center;"><strong>${resumen[art]}</strong></td>
+      </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function renderCatalogo() {
+  const container = document.getElementById('atab-catalogo');
+  if (!container) return;
+
+  if (!articulos.length) {
+    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No hay artículos cargados en el catálogo.</p>';
+    return;
+  }
+
+  let html = `
+    <div style="padding: 15px 0;">
+      <h3 style="margin-bottom:12px;">Catálogo de Artículos</h3>
+      <table class="tabla-admin" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f3f4f6; text-align:left;">
+            <th style="padding:10px; border-bottom:1px solid #ddd;">#</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Artículo / Descripción</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  articulos.forEach((art, index) => {
+    const nombreArticulo = typeof art === 'object' ? (art.articulo || art.nombre || JSON.stringify(art)) : art;
+    html += `
+      <tr>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; color:var(--texto-sec);">${index + 1}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${nombreArticulo}</td>
+      </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function renderUsuarios() {
+  const container = document.getElementById('atab-usuarios');
+  if (!container) return;
+
+  const userKeys = Object.keys(usuarios);
+  if (!userKeys.length) {
+    container.innerHTML = '<p style="padding:20px; color:var(--texto-sec)">No se encontraron usuarios registrados.</p>';
+    return;
+  }
+
+  let html = `
+    <div style="padding: 15px 0;">
+      <div style="display:flex; justify-between; align-items:center; margin-bottom:12px;">
+        <h3>Usuarios del Sistema</h3>
+      </div>
+      <table class="tabla-admin" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f3f4f6; text-align:left;">
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Usuario</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Nombre</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Rol</th>
+            <th style="padding:10px; border-bottom:1px solid #ddd;">Dependencia</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  userKeys.forEach(uKey => {
+    const u = usuarios[uKey];
+    html += `
+      <tr>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;"><strong>${uKey}</strong></td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.nombre || '-'}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.rol || '-'}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">${u.dependencia || '-'}</td>
+      </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
