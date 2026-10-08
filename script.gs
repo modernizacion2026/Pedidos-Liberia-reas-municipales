@@ -95,15 +95,27 @@ function doLogin(p) {
   return { ok: false, error: "Usuario o contrasena incorrectos" };
 }
 
-function guardarPedido(p) {
+function getPedidos() {
   var hp = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_PEDIDOS);
-  if (!hp) return { ok: false, error: "Sin hoja pedidos" };
-  var id = Date.now();
-  hp.appendRow([id, p.fecha||"", p.hora||"", p.secretaria||"", p.area||"",
-    p.nombre||"", p.email||"", p.observaciones||"",
-    typeof p.items==="string" ? p.items : JSON.stringify(p.items||[]),
-   "Solicitado", p.dependencia||""]);
-  return { ok: true, id: id };
+  if (!hp) return { ok: false, pedidos: [] };
+  var rows = hp.getDataRange().getValues();
+  var pedidos = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r[0]) continue;
+    var items = [];
+    try { items = JSON.parse(r[8]); } catch(e) {}
+    items = items.map(function(it) {
+      var c = {};
+      for (var k in it) c[k] = it[k];
+      if (c.foto) { c.tieneFoto = true; c.foto = ''; }
+      return c;
+    });
+    pedidos.unshift({ id:r[0], fecha:r[1], hora:r[2], secretaria:r[3], area:r[4],
+      nombre:r[5], email:r[6], observaciones:r[7], items:items,
+      estado:r[9]||"Pendiente", dependencia:r[10]||"" });
+  }
+  return { ok: true, pedidos: pedidos };
 }
 
 function getPedidos() {
