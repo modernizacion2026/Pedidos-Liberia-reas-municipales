@@ -169,10 +169,15 @@ function renderTabla() {
     const itemsTag = itemsConEstado.length > 0
       ? `<br><span style="font-size:10px;color:${itemsPend>0?'#D97706':'#059669'};font-weight:600">${itemsPend>0?itemsPend+' pend.':'✓ completo'}</span>`
       : '';
+    let fechaMostrar = p.fecha;
+
+if (fechaMostrar && fechaMostrar.includes('T')) {
+  fechaMostrar = new Date(fechaMostrar).toLocaleDateString('es-AR');
+}
     return `
     <tr>
       <td style="color:var(--texto-sec);font-size:12px">${data.length-i}</td>
-      <td style="white-space:nowrap"><strong>${p.fecha}</strong><br><span style="color:var(--texto-sec);font-size:12px">${p.hora}</span></td>
+      <td style="white-space:nowrap"><strong>${fechaMostrar}</strong><br><span style="color:var(--texto-sec);font-size:12px">${p.hora}</span></td>
       <td><strong>${p.nombre}</strong>${p.email?`<br><span style="color:var(--texto-sec);font-size:12px">${p.email}</span>`:''}</td>
       <td style="font-size:12px">${p.secretaria}</td>
       <td style="font-size:12px">${p.area}</td>
