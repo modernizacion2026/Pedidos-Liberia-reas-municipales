@@ -193,7 +193,7 @@ function renderTabla() {
       <td style="white-space:nowrap">
         <button class="btn-secondary btn-sm" onclick="verDetalle('${p.id}')">Ver</button>
         <button class="btn-secondary btn-sm" style="margin-left:4px;background:#EFF6FF;color:#2563EB;border-color:#93C5FD" onclick="remitoEquipo('${p.id}')" title="Remito por equipo">Rem. Equipo</button>
-        <button class="btn-secondary btn-danger btn-sm" style="margin-left:4px" onclick="deletePedido('${p.id}')">&#10005;</button>
+       
       </td>
     </tr>`;
   }).join('');
