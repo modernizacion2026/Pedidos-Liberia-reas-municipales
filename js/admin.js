@@ -1,4 +1,5 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiQGeLGs8zdt7wj16E7m6LtKqf5S_pNrjds7FF7HkjdSuAB6dZZJF3uJkSgSU_jp02Rw/exec';
+const SCRIPT_URL = 'const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF8tJ167vf3CJORJtHMMiLJh9r_CAdosXtcOfdmk82Jb4hBhT7gulxa3D0DcP0V-3V/exec';
+const ESTADO_DISPLAY = { ';
 
 const ESTADO_DISPLAY = { 
   'Pendiente': 'Pendiente', 
