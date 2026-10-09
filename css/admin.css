@@ -61,12 +61,25 @@
   .filter-field label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--texto-sec);margin:0;}
   .filter-field select,.filter-field input{padding:8px 12px;font-size:13px;}
   .filter-actions{display:flex;gap:6px;align-items:flex-end;}
-  .table-wrap{background:white;border:1px solid var(--gris-borde);border-radius:var(--radio-lg);box-shadow:var(--sombra);overflow:hidden;margin-bottom:1rem;}
+  .table-wrap{.table-wrap{
+    background:white;
+    border:1px solid var(--gris-borde);
+    border-radius:var(--radio-lg);
+    box-shadow:var(--sombra);
+    overflow-x:auto;
+    overflow-y:visible;
+    margin-bottom:1rem;
+};}
   .table-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--gris-borde);flex-wrap:wrap;gap:10px;}
   .table-header h3{font-size:15px;font-weight:700;color:var(--texto);}
   .admin-table{width:100%;border-collapse:collapse;font-size:13px;}
   .admin-table th{text-align:left;font-size:11px;font-weight:700;color:var(--texto-sec);text-transform:uppercase;letter-spacing:0.06em;padding:12px 16px;background:var(--gris-claro);border-bottom:2px solid var(--gris-borde);white-space:nowrap;}
   .admin-table td{padding:12px 16px;border-bottom:1px solid var(--gris-borde);vertical-align:middle;}
+.admin-table th:last-child,
+.admin-table td:last-child{
+    min-width:180px;
+    white-space:nowrap;
+}
   .admin-table tr:last-child td{border-bottom:none;}
   .admin-table tr:hover td{background:#FAFAFA;}
   .status-badge{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;}
